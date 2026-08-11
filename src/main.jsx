@@ -6,7 +6,7 @@ import {
   MoreHorizontal, PanelLeftClose, Play, Plus, Search, Settings,
   Sparkles, Terminal, Wifi, X, Server, Globe, Zap, Database,
   Film, Camera, FileText, BookOpen, Workflow, Brain, Cloud,
-  FolderOpen, RefreshCw, ArrowRight, Sun, Moon, Home, Monitor
+  FolderOpen, RefreshCw, ArrowRight, Home, Monitor, Key, Link, Trash2, Check, ClipboardCopy
 } from 'lucide-react'
 import './styles.css'
 
@@ -15,6 +15,7 @@ const TABS = [
   { id: 'agents', label: 'Agents', icon: <Bot /> },
   { id: 'apps', label: 'Apps', icon: <Box /> },
   { id: 'activity', label: 'Activity', icon: <Activity /> },
+  { id: 'settings', label: 'Settings', icon: <Settings /> },
 ]
 
 const WORKSPACES = [
@@ -34,23 +35,23 @@ const LOCAL_AGENTS = [
   { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', iframe: null },
   { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', iframe: null },
   { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', iframe: null },
-  { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Checking…', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', iframe: null },
+  { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', iframe: null },
 ]
 
 const HOMELAB_SERVICES = [
-  { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Checking…', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', iframe: null },
-  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Checking…', color: '#c084fc', task: 'Model server', usage: '—', port: 3004, group: 'AI', iframe: '/app/lmstudio/' },
-  { id: 'dify', name: 'Dify', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Checking…', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', iframe: null },
-  { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Checking…', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', iframe: null },
-  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Checking…', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', iframe: '/app/n8n/' },
-  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Checking…', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', iframe: '/app/jellyfin/web/' },
-  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Checking…', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', iframe: '/app/immich/' },
-  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Checking…', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', iframe: null },
-  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Checking…', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', iframe: '/app/paperless/' },
-  { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Checking…', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', iframe: null },
-  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Checking…', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', iframe: '/app/hivekeep/' },
-  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Checking…', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', iframe: '/app/karakeep/' },
-  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Checking…', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', iframe: '/app/homepage/' },
+  { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Running', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', iframe: null },
+  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 3004, group: 'AI', iframe: '/app/lmstudio/' },
+  { id: 'dify', name: 'Dify AI', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Running', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', iframe: null },
+  { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Running', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', iframe: null },
+  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', iframe: '/app/n8n/' },
+  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', iframe: '/app/jellyfin/web/' },
+  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', iframe: '/app/immich/' },
+  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', iframe: null },
+  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Running', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', iframe: '/app/paperless/' },
+  { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Running', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', iframe: null },
+  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Running', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', iframe: '/app/hivekeep/' },
+  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Running', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', iframe: '/app/karakeep/' },
+  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Running', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', iframe: '/app/homepage/' },
   { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', iframe: '/app/weather/' },
   { id: 'dify-web', name: 'Dify Web', icon: <Workflow />, kind: 'AI Platform UI', state: 'Running', color: '#60a5fa', task: 'Dify interface', usage: '—', port: 3003, group: 'AI', iframe: '/app/dify/' },
   { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', iframe: '/app/convex/' },
@@ -59,7 +60,7 @@ const HOMELAB_SERVICES = [
   { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', iframe: '/app/files/' },
   { id: 'postgres-hl', name: 'PostgreSQL', icon: <Database />, kind: 'Database', state: 'Running', color: '#60a5fa', task: 'Primary DB', usage: '—', port: 5432, group: 'Infrastructure', iframe: null },
   { id: 'redis-hl', name: 'Redis', icon: <Zap />, kind: 'Cache', state: 'Running', color: '#f87171', task: 'In-memory cache', usage: '—', port: 6379, group: 'Infrastructure', iframe: null },
-  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', iframe: null },
+  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', iframe: '/app/openship/' },
 ]
 
 const VPS_SERVICES = [
@@ -132,6 +133,29 @@ function App() {
   const [openApps, setOpenApps] = useState([])
   const [activeAppId, setActiveAppId] = useState(null)
 
+  const [providers, setProviders] = useState([
+    { id: 'ollama-local', name: 'Ollama (Local)', endpoint: 'http://localhost:11434', models: 'auto', status: 'Connected' },
+    { id: 'ollama-hl', name: 'Ollama (Homelab)', endpoint: 'http://192.168.1.42:11434', models: 'auto', status: 'Connected' },
+    { id: 'openwebui', name: 'Open WebUI API', endpoint: 'http://64.118.132.92:8080', models: 'auto', status: 'Connected' },
+  ])
+  const [apiKeys, setApiKeys] = useState([
+    { id: 1, name: 'OpenAI API Key', key: '••••••••sk-abc', provider: 'OpenAI' },
+    { id: 2, name: 'Anthropic API Key', key: '••••••••ant-xyz', provider: 'Anthropic' },
+  ])
+  const [mcpServers, setMcpServers] = useState([
+    { id: 1, name: 'Zapier MCP', endpoint: 'https://mcp.zapier.com/api/v1/connect', type: 'remote', status: 'Connected' },
+  ])
+  const [showAddProvider, setShowAddProvider] = useState(false)
+  const [showAddApiKey, setShowAddApiKey] = useState(false)
+  const [showAddMcp, setShowAddMcp] = useState(false)
+  const [newProvider, setNewProvider] = useState({ name: '', endpoint: '' })
+  const [newApiKey, setNewApiKey] = useState({ name: '', key: '', provider: '' })
+  const [newMcp, setNewMcp] = useState({ name: '', endpoint: '', type: 'remote' })
+  const [customApps, setCustomApps] = useState([])
+  const [showAddApp, setShowAddApp] = useState(false)
+  const [newApp, setNewApp] = useState({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' })
+  const [localAppMode, setLocalAppMode] = useState(null)
+
   const now = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   const fetchTO = (url, ms = 5000) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), ms); return fetch(url, { signal: c.signal }).finally(() => clearTimeout(t)) }
 
@@ -162,7 +186,7 @@ function App() {
   const localAgents = LOCAL_AGENTS.map(a => a.id === 'ollama-local' ? { ...a, state: ollamaLocal.available ? (ollamaLocal.active.length ? 'Working' : 'Running') : 'Unavailable', task: ollamaLocal.available ? (ollamaLocal.active.length ? `${ollamaLocal.active.length} model loaded` : `${ollamaLocal.models.length} models`) : 'API unavailable', usage: ollamaLocal.active.length ? 'Model loaded' : '—' } : a)
   const hlSvcs = HOMELAB_SERVICES.map(s => homelabStatus[s.id] ? { ...s, state: homelabStatus[s.id] } : s)
   const vpsSvcs = VPS_SERVICES.map(s => ({ ...s, workspace: 'vps' }))
-  const allWorkspaceServices = { local: localAgents, homelab: hlSvcs, vps: vpsSvcs }
+  const allWorkspaceServices = { local: [...localAgents, ...customApps.filter(a => a.workspace?.includes('local'))], homelab: [...hlSvcs, ...customApps.filter(a => a.workspace?.includes('homelab'))], vps: [...vpsSvcs, ...customApps.filter(a => a.workspace?.includes('vps'))] }
   const filteredServices = allWorkspaceServices[activeWorkspace] || []
   const filteredAgents = filteredServices.filter(s => s.group === 'AI' || s.group === 'Agents')
   const filteredApps = filteredServices.filter(s => s.group !== 'AI' && s.group !== 'Agents')
@@ -174,6 +198,11 @@ function App() {
     if (exists) { setActiveAppId(svc.id); return }
     setOpenApps(a => [...a, { id: svc.id, name: svc.name, icon: svc.icon, iframe: svc.iframe, color: svc.color }])
     setActiveAppId(svc.id)
+  }
+  const handleLocalApp = (svc) => {
+    if (svc.id === 'codex' || svc.id === 'ollama-local') setOllamaOpen(true)
+    else if (svc.id === 'terminal') { setActiveTab('overview') }
+    setActivity(a => [[now(), 'Workspace', `Opened ${svc.name}`], ...a])
   }
   const closeApp = (id) => {
     setOpenApps(a => a.filter(x => x.id !== id))
@@ -224,7 +253,7 @@ function App() {
         <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace === 'homelab' ? 'HOMELAB' : activeWorkspace === 'vps' ? 'VPS' : 'RUNTIME'}</p><h2>{activeWorkspace === 'local' ? 'Apps & agents' : 'Services'}</h2></div><button className="text-button">View all <span>→</span></button></div>
         <div className="app-list">
           {filteredServices.map(svc => (
-            <button key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : null}>
+            <button key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : activeWorkspace === 'local' ? handleLocalApp(svc) : null}>
               <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind} · {svc.task}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
@@ -236,7 +265,7 @@ function App() {
         </div>
         <div className="selected-app">
           <div><span className="pulse" /><p><b>{filteredServices[0]?.name}</b> is {filteredServices[0]?.state?.toLowerCase()}</p><small>{filteredServices[0]?.task}</small></div>
-          <button onClick={() => filteredServices[0]?.iframe && openService(filteredServices[0])} disabled={!filteredServices[0]?.iframe}><Play size={15} />Open</button>
+          <button onClick={() => { if (activeWorkspace === 'local' && !filteredServices[0]?.iframe) handleLocalApp(filteredServices[0]); else if (filteredServices[0]?.iframe) openService(filteredServices[0]) }} disabled={activeWorkspace === 'local' ? false : !filteredServices[0]?.iframe}><Play size={15} />{activeWorkspace === 'local' && filteredServices[0]?.id === 'codex' ? 'AI Chat' : activeWorkspace === 'local' ? filteredServices[0]?.id === 'ollama-local' ? 'AI Chat' : 'Open' : 'Open'}</button>
         </div>
       </section>
 
@@ -316,6 +345,90 @@ function App() {
         <div className="timeline" style={{ maxHeight: '600px', overflow: 'auto' }}>{activity.map(([time, source, message], i) => <div className="event" key={`${time}-${i}`}><time>{time}</time><i className={source.toLowerCase()} /><div><b>{source}</b><span>{message}</span></div></div>)}</div>
       </section>
     </div>}
+
+    {activeTab === 'settings' && <div className="content-grid">
+      <section className="panel" style={{ gridColumn: '1' }}>
+        <div className="panel-heading"><div><p className="eyebrow">AI PROVIDERS</p><h2>Model Providers</h2></div><button onClick={() => setShowAddProvider(true)} className="add-task"><Plus size={16} />Add</button></div>
+        {showAddProvider && <div className="composer" style={{ flexWrap: 'wrap' }}>
+          <input value={newProvider.name} onChange={e => setNewProvider({ ...newProvider, name: e.target.value })} placeholder="Provider name" style={{ flex: '1 1 120px' }} />
+          <input value={newProvider.endpoint} onChange={e => setNewProvider({ ...newProvider, endpoint: e.target.value })} placeholder="Endpoint URL" style={{ flex: '1 1 200px' }} />
+          <button type="button" onClick={() => setShowAddProvider(false)}><X size={16} /></button>
+          <button type="submit" onClick={() => { if (newProvider.name && newProvider.endpoint) { setProviders(p => [...p, { id: Date.now(), ...newProvider, models: 'auto', status: 'Untested' }]); setNewProvider({ name: '', endpoint: '' }); setShowAddProvider(false); setActivity(a => [[now(), 'Settings', `Added provider: ${newProvider.name}`], ...a]) } }}>Save</button>
+        </div>}
+        <div className="app-list">
+          {providers.map(p => <div key={p.id} className="app-row">
+            <span className="app-icon" style={{ color: '#a595ff', background: '#a595ff17' }}><Server size={18} /></span>
+            <span className="app-info"><b>{p.name}</b><small>{p.endpoint} · {p.models} models</small></span>
+            <span className={`state ${p.status === 'Connected' ? 'running' : 'offline'}`}><i />{p.status}</span>
+            <button onClick={() => { setActivity(a => [[now(), 'Settings', `Testing connection to ${p.name}…`], ...a]); fetch(p.endpoint + '/api/tags', { signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined }).then(r => r.ok).catch(() => false).then(ok => setProviders(ps => ps.map(x => x.id === p.id ? { ...x, status: ok ? 'Connected' : 'Unreachable' } : x))) }} className="run" title="Test connection"><Play size={14} /></button>
+            <button onClick={() => { setProviders(ps => ps.filter(x => x.id !== p.id)); setActivity(a => [[now(), 'Settings', `Removed provider: ${p.name}`], ...a]) }} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>
+          </div>)}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-heading"><div><p className="eyebrow">API KEYS</p><h2>Keys & Secrets</h2></div><button onClick={() => setShowAddApiKey(true)} className="add-task"><Plus size={16} />Add</button></div>
+        {showAddApiKey && <div className="composer" style={{ flexWrap: 'wrap' }}>
+          <input value={newApiKey.name} onChange={e => setNewApiKey({ ...newApiKey, name: e.target.value })} placeholder="Key name" style={{ flex: '1 1 120px' }} />
+          <input value={newApiKey.key} onChange={e => setNewApiKey({ ...newApiKey, key: e.target.value })} placeholder="API key" style={{ flex: '1 1 150px' }} />
+          <input value={newApiKey.provider} onChange={e => setNewApiKey({ ...newApiKey, provider: e.target.value })} placeholder="Provider" style={{ flex: '1 1 100px' }} />
+          <button type="button" onClick={() => setShowAddApiKey(false)}><X size={16} /></button>
+          <button type="submit" onClick={() => { if (newApiKey.name && newApiKey.key) { setApiKeys(k => [...k, { id: Date.now(), ...newApiKey, key: '••••••••' + newApiKey.key.slice(-6) }]); setNewApiKey({ name: '', key: '', provider: '' }); setShowAddApiKey(false) } }}>Save</button>
+        </div>}
+        <div className="app-list">
+          {apiKeys.map(k => <div key={k.id} className="app-row">
+            <span className="app-icon" style={{ color: '#fbbf24', background: '#fbbf2417' }}><Key size={18} /></span>
+            <span className="app-info"><b>{k.name}</b><small>{k.provider} · {k.key}</small></span>
+            <button onClick={() => { navigator.clipboard?.writeText(k.key); setActivity(a => [[now(), 'Settings', `Copied key: ${k.name}`], ...a]) }} style={{ background: 'transparent', border: 0, color: '#8b8792', padding: '4px', borderRadius: '4px' }}><ClipboardCopy size={14} /></button>
+            <button onClick={() => setApiKeys(ks => ks.filter(x => x.id !== k.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>
+          </div>)}
+        </div>
+      </section>
+
+      <section className="panel" style={{ gridColumn: '1 / -1' }}>
+        <div className="panel-heading"><div><p className="eyebrow">MCP SERVERS</p><h2>MCP Server Connections</h2></div><button onClick={() => setShowAddMcp(true)} className="add-task"><Plus size={16} />Add</button></div>
+        {showAddMcp && <div className="composer" style={{ flexWrap: 'wrap' }}>
+          <input value={newMcp.name} onChange={e => setNewMcp({ ...newMcp, name: e.target.value })} placeholder="Server name" style={{ flex: '1 1 120px' }} />
+          <input value={newMcp.endpoint} onChange={e => setNewMcp({ ...newMcp, endpoint: e.target.value })} placeholder="Endpoint URL" style={{ flex: '1 1 220px' }} />
+          <select value={newMcp.type} onChange={e => setNewMcp({ ...newMcp, type: e.target.value })} style={{ flex: '0 0 100px', background: '#19171d', color: '#eee', border: '1px solid #3d3850', borderRadius: '7px', padding: '9px 11px', fontSize: '13px' }}>
+            <option value="remote">Remote</option><option value="local">Local</option>
+          </select>
+          <button type="button" onClick={() => setShowAddMcp(false)}><X size={16} /></button>
+          <button type="submit" onClick={() => { if (newMcp.name && newMcp.endpoint) { setMcpServers(s => [...s, { id: Date.now(), ...newMcp, status: 'Added' }]); setNewMcp({ name: '', endpoint: '', type: 'remote' }); setShowAddMcp(false) } }}>Save</button>
+        </div>}
+        <div className="app-list">
+          {mcpServers.map(s => <div key={s.id} className="app-row">
+            <span className="app-icon" style={{ color: '#60a5fa', background: '#60a5fa17' }}><Link size={18} /></span>
+            <span className="app-info"><b>{s.name}</b><small>{s.endpoint} · {s.type}</small></span>
+            <span className={`state ${s.status === 'Connected' ? 'running' : 'offline'}`}><i />{s.status}</span>
+            <button onClick={() => { setActivity(a => [[now(), 'Settings', `Testing MCP: ${s.name}…`], ...a]); fetch(s.endpoint).then(r => r.ok).catch(() => false).then(ok => setMcpServers(ms => ms.map(x => x.id === s.id ? { ...x, status: ok ? 'Connected' : 'Unreachable' } : x))) }} className="run" title="Test"><Play size={14} /></button>
+            <button onClick={() => setMcpServers(ms => ms.filter(x => x.id !== s.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>
+          </div>)}
+        </div>
+      </section>
+      <section className="panel" style={{ gridColumn: '1 / -1' }}>
+        <div className="panel-heading"><div><p className="eyebrow">APP MANAGEMENT</p><h2>Custom Apps & Services</h2></div><button onClick={() => { setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }) }} className="add-task"><Plus size={16} />Add</button></div>
+        {showAddApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px' }}>
+          <input value={newApp.name} onChange={e => setNewApp({ ...newApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 100px' }} />
+          <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL or proxy path" style={{ flex: '1 1 180px' }} />
+          <input value={newApp.kind} onChange={e => setNewApp({ ...newApp, kind: e.target.value })} placeholder="Kind (e.g. 'Media Server')" style={{ flex: '1 1 130px' }} />
+          <input value={newApp.port} onChange={e => setNewApp({ ...newApp, port: e.target.value })} placeholder="Port" style={{ flex: '0 0 60px' }} />
+          <input value={newApp.group} onChange={e => setNewApp({ ...newApp, group: e.target.value })} placeholder="Group" style={{ flex: '0 0 90px' }} />
+          <button type="button" onClick={() => setShowAddApp(false)}><X size={16} /></button>
+          <button type="submit" onClick={() => { if (newApp.name) { setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, kind: newApp.kind || 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: parseInt(newApp.port) || null, group: newApp.group || 'Custom', iframe: newApp.url || null, workspace: newApp.workspace }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
+        </div>}
+        <div className="app-list" style={{ maxHeight: '300px', overflow: 'auto' }}>
+          {[...LOCAL_AGENTS, ...HOMELAB_SERVICES, ...VPS_SERVICES, ...customApps].map(a => <div key={a.id} className="app-row">
+            <span className="app-icon" style={{ color: a.color, background: `${a.color}17` }}>{a.icon}</span>
+            <span className="app-info"><b>{a.name}</b><small>{a.kind} · {a.group} · {a.port ? ':' + a.port : 'no port'} {a.iframe ? '→ ' + a.iframe : '· no link'}</small></span>
+            <span className={`state ${a.state?.toLowerCase()}`}><i />{a.state}</span>
+            {a.iframe && <button onClick={() => { const w = customApps.find(x => x.id === a.id) ? ['local','homelab','vps'] : []; openService(a) }} className="run" title="Test launch"><Play size={14} /></button>}
+            {customApps.some(x => x.id === a.id) && <button onClick={() => setCustomApps(cs => cs.filter(x => x.id !== a.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>}
+          </div>)}
+        </div>
+      </section>
+    </div>}
+
   </>
 
   return <div className="shell">

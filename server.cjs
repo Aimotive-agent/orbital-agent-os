@@ -43,6 +43,8 @@ const targets = {
   openwebui: 'http://64.118.132.92:8080',
   langflow: 'http://64.118.132.92:7860',
   kestra: 'http://64.118.132.92:8085',
+  openship: 'http://192.168.1.42:3148',
+  nextcloud: 'http://192.168.1.42:8866',
 }
 
 app.use('/app/:name', function (req, res) {
