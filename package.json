@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "express": "^5.2.1",
+    "express": "^4.22.2",
     "http-proxy-middleware": "^4.2.0",
     "lucide-react": "latest",
     "react": "latest",
