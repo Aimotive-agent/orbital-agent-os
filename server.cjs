@@ -2,7 +2,6 @@ const express = require('express')
 const httpProxy = require('http-proxy')
 const cheerio = require('cheerio')
 const path = require('path')
-const url = require('url')
 
 const app = express()
 const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false, selfHandleResponse: true })
@@ -34,12 +33,14 @@ proxy.on('proxyReq', function (proxyReq, req, res, options) {
   proxyReq.removeHeader('accept-encoding')
   proxyReq.removeHeader('Accept-Encoding')
 
-  const turl = new url.URL(req._proxyTarget || 'http://localhost')
-  const targetOrigin = turl.protocol + '//' + turl.host
-  proxyReq.setHeader('Origin', targetOrigin)
-  if (req.headers.referer) {
-    proxyReq.setHeader('Referer', targetOrigin + '/')
-  }
+  try {
+    const turl = new URL(req._proxyTarget || 'http://localhost')
+    const targetOrigin = turl.protocol + '//' + turl.host
+    proxyReq.setHeader('Origin', targetOrigin)
+    if (req.headers.referer) {
+      proxyReq.setHeader('Referer', targetOrigin + '/')
+    }
+  } catch {}
 })
 
 proxy.on('proxyRes', function (proxyRes, req, res) {
