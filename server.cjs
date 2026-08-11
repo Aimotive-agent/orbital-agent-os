@@ -27,6 +27,7 @@ const targets = {
   kestra: 'http://64.118.132.92:8085',
   openship: 'http://192.168.1.42:3148',
   nextcloud: 'http://192.168.1.42:8866',
+  'ollama-hl': 'http://192.168.1.42:11434',
 }
 
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
@@ -119,7 +120,6 @@ app.use('/app/:name', function (req, res) {
   req.url = req.url.replace('/app/' + req.params.name, '') || '/'
 
   if (req.params.name === 'ollama-hl') {
-    req.url = '/api' + req.url
     return plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
   }
 
