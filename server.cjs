@@ -13,7 +13,7 @@ proxy.on('proxyRes', function (proxyRes, req) {
   }
   const loc = proxyRes.headers['location']
   if (loc) {
-    const base = '/' + req.url.split('/').slice(1, 3).join('/') + '/'
+    const base = req._proxyBase || '/'
     if (loc.startsWith('/') && !loc.startsWith(base)) {
       proxyRes.headers['location'] = base + loc.replace(/^\//, '')
     }
@@ -51,6 +51,7 @@ app.use('/app/:name', function (req, res) {
     res.writeHead(404, { 'Content-Type': 'text/plain' })
     return res.end('Service not found')
   }
+  req._proxyBase = '/app/' + req.params.name + '/'
   req.url = req.url.replace('/app/' + req.params.name, '') || '/'
   proxy.web(req, res, { target })
 })
