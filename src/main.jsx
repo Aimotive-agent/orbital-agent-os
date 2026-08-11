@@ -279,7 +279,7 @@ function App() {
       </section>
 
       {activeWorkspace === 'local' && ollamaOpen && <section className="panel ollama-workspace">
-        <div className="panel-heading"><div><p className="eyebrow">AI CHAT</p><h2>{localAppMode === 'ai-chat' ? 'AI Assistant' : 'Terminal'}</h2></div><button onClick={() => { setOllamaOpen(false); setLocalAppMode(null) }} className="dots"><X size={18} /></button></div>
+        <div className="panel-heading"><div><p className="eyebrow">{localAppMode === 'ai-chat' ? 'AI CHAT' : localAppMode === 'terminal' ? 'TERMINAL' : 'BROWSER'}</p><h2>{localAppMode === 'ai-chat' ? 'AI Assistant' : localAppMode === 'terminal' ? 'System Info' : 'Web Browser'}</h2></div><button onClick={() => { setOllamaOpen(false); setLocalAppMode(null) }} className="dots"><X size={18} /></button></div>
         {localAppMode === 'ai-chat' && <>
           {!ollamaLocal.available && <div style={{ padding: '12px 16px', background: '#1a1720', borderRadius: '8px', marginBottom: '8px', fontSize: '12px', color: '#8b8792' }}>
             <b style={{ color: '#ffb870' }}>Local Ollama offline.</b> Using Homelab Ollama (17 models available).
@@ -314,9 +314,12 @@ function App() {
           <div>3 days, 14 hours</div>
           <div style={{ marginTop: '8px', color: '#8b8792' }}>CPU: {cpu}% · Vite dev server active</div>
         </div>}
-        {localAppMode === 'browser' && <div style={{ padding: '16px', background: '#1a1720', borderRadius: '8px', fontFamily: 'DM Mono', fontSize: '12px', color: '#78b7ff', lineHeight: '1.7' }}>
-          <div style={{ marginBottom: '8px', color: '#8b8792' }}>Web Browser</div>
-          <iframe src="https://www.google.com" style={{ width: '100%', height: '400px', border: '1px solid #302e33', borderRadius: '8px', background: '#fff' }} />
+        {localAppMode === 'browser' && <div style={{ padding: '0' }}>
+          <div style={{ padding: '8px 16px', background: '#1a1720', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input id="browser-url" defaultValue="https://en.wikipedia.org" style={{ flex: 1, background: '#121118', border: '1px solid #3d3850', borderRadius: '7px', color: '#eee', padding: '9px 11px', fontSize: '13px' }} onKeyDown={e => { if (e.key === 'Enter') { const u = e.target.value; const iframe = document.getElementById('browser-iframe'); if (iframe && u) { iframe.src = u.startsWith('http') ? u : 'https://' + u } } }} placeholder="Enter URL…" />
+            <button onClick={() => { const u = document.getElementById('browser-url')?.value; const iframe = document.getElementById('browser-iframe'); if (iframe && u) iframe.src = u.startsWith('http') ? u : 'https://' + u }} style={{ padding: '8px 14px', borderRadius: '7px', background: '#302e33', color: '#78b7ff', border: 'none', cursor: 'pointer', fontSize: '13px' }}>Go</button>
+          </div>
+          <iframe id="browser-iframe" src="https://en.wikipedia.org" style={{ width: '100%', height: '420px', border: 'none', background: '#fff', display: 'block' }} />
         </div>}
       </section>}
 

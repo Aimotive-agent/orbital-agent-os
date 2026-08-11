@@ -2,6 +2,7 @@ const express = require('express')
 const httpProxy = require('http-proxy')
 const cheerio = require('cheerio')
 const path = require('path')
+const url = require('url')
 
 const app = express()
 const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false, selfHandleResponse: true })
@@ -32,6 +33,13 @@ const targets = {
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
   proxyReq.removeHeader('accept-encoding')
   proxyReq.removeHeader('Accept-Encoding')
+
+  const turl = new url.URL(req._proxyTarget || 'http://localhost')
+  const targetOrigin = turl.protocol + '//' + turl.host
+  proxyReq.setHeader('Origin', targetOrigin)
+  if (req.headers.referer) {
+    proxyReq.setHeader('Referer', targetOrigin + '/')
+  }
 })
 
 proxy.on('proxyRes', function (proxyRes, req, res) {
@@ -95,10 +103,18 @@ proxy.on('error', function (err, req, res) {
   if (!res.headersSent) { res.writeHead(503); res.end('Service unavailable') }
 })
 
+plainProxy.on('error', function (err, req, res) {
+  if (!res.headersSent) {
+    res.writeHead(502, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ error: 'Ollama unreachable', message: err.message }))
+  }
+})
+
 app.use('/app/:name', function (req, res) {
   const target = targets[req.params.name]
   if (!target) { res.writeHead(404); return res.end('Service not found') }
   req._proxyBase = '/app/' + req.params.name + '/'
+  req._proxyTarget = target
   req.url = req.url.replace('/app/' + req.params.name, '') || '/'
   proxy.web(req, res, { target, selfHandleResponse: true })
 })
