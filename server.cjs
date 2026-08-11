@@ -1,29 +1,10 @@
 const express = require('express')
 const httpProxy = require('http-proxy')
+const cheerio = require('cheerio')
 const path = require('path')
 
 const app = express()
-const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false })
-
-proxy.on('proxyRes', function (proxyRes, req) {
-  delete proxyRes.headers['x-frame-options']
-  if (proxyRes.headers['content-security-policy']) {
-    proxyRes.headers['content-security-policy'] = proxyRes.headers['content-security-policy']
-      .replace(/frame-ancestors[^;]*;?/gi, '')
-  }
-  const loc = proxyRes.headers['location']
-  if (loc) {
-    const base = req._proxyBase || '/'
-    if (loc.startsWith('/') && !loc.startsWith(base)) {
-      proxyRes.headers['location'] = base + loc.replace(/^\//, '')
-    }
-  }
-})
-
-proxy.on('error', function (err, req, res) {
-  res.writeHead(503, { 'Content-Type': 'text/plain' })
-  res.end('Service unavailable')
-})
+const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false, selfHandleResponse: true })
 
 const targets = {
   jellyfin: 'http://192.168.1.42:8096',
@@ -47,6 +28,69 @@ const targets = {
   nextcloud: 'http://192.168.1.42:8866',
 }
 
+proxy.on('proxyRes', function (proxyRes, req, res) {
+  const base = req._proxyBase || '/'
+
+  delete proxyRes.headers['x-frame-options']
+  if (proxyRes.headers['content-security-policy']) {
+    proxyRes.headers['content-security-policy'] = proxyRes.headers['content-security-policy']
+      .replace(/frame-ancestors[^;]*;?/gi, '')
+      .replace(/;\s*$/, '')
+    if (!proxyRes.headers['content-security-policy'].trim()) delete proxyRes.headers['content-security-policy']
+  }
+
+  const loc = proxyRes.headers['location']
+  if (loc) {
+    if (loc.startsWith('/') && !loc.startsWith(base)) {
+      proxyRes.headers['location'] = base + loc.replace(/^\//, '')
+    }
+  }
+
+  const ct = (proxyRes.headers['content-type'] || '').toLowerCase()
+  const isHTML = ct.includes('text/html') || ct.includes('application/xhtml')
+
+  if (isHTML) {
+    delete proxyRes.headers['content-length']
+    let body = ''
+    proxyRes.on('data', chunk => { body += chunk.toString() })
+    proxyRes.on('end', () => {
+      try {
+        const $ = cheerio.load(body)
+        if ($('base').length === 0) {
+          $('head').prepend(`<base href="${base}">`)
+        }
+        $('[src^="/"]').each((i, el) => {
+          const src = $(el).attr('src')
+          if (!src.startsWith(base)) $(el).attr('src', base + src.replace(/^\//, ''))
+        })
+        $('[href^="/"]').each((i, el) => {
+          const href = $(el).attr('href')
+          if (href && !href.startsWith(base)) $(el).attr('href', base + href.replace(/^\//, ''))
+        })
+        $('form[action^="/"]').each((i, el) => {
+          const action = $(el).attr('action')
+          if (action && !action.startsWith(base)) $(el).attr('action', base + action.replace(/^\//, ''))
+        })
+        res.writeHead(proxyRes.statusCode, proxyRes.headers)
+        res.end($.html())
+      } catch {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers)
+        res.end(body)
+      }
+    })
+  } else {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers)
+    proxyRes.pipe(res)
+  }
+})
+
+proxy.on('error', function (err, req, res) {
+  if (!res.headersSent) {
+    res.writeHead(503, { 'Content-Type': 'text/plain' })
+    res.end('Service unavailable')
+  }
+})
+
 app.use('/app/:name', function (req, res) {
   const target = targets[req.params.name]
   if (!target) {
@@ -55,7 +99,7 @@ app.use('/app/:name', function (req, res) {
   }
   req._proxyBase = '/app/' + req.params.name + '/'
   req.url = req.url.replace('/app/' + req.params.name, '') || '/'
-  proxy.web(req, res, { target })
+  proxy.web(req, res, { target, selfHandleResponse: true })
 })
 
 app.use(express.static(path.join(__dirname, 'dist')))
