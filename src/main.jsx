@@ -1,0 +1,395 @@
+import React, { useEffect, useMemo, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import {
+  Activity, Bot, Box, ChevronDown, CircleDot, Code2, Command, Cpu,
+  Gauge, HardDrive, LayoutDashboard, MemoryStick, MessageSquare,
+  MoreHorizontal, PanelLeftClose, Play, Plus, Search, Settings,
+  Sparkles, Terminal, Wifi, X, Server, Globe, Zap, Database,
+  Film, Camera, FileText, BookOpen, Workflow, Brain, Cloud,
+  FolderOpen, RefreshCw, ArrowRight, Sun, Moon, Home, Monitor
+} from 'lucide-react'
+import './styles.css'
+
+const TABS = [
+  { id: 'overview', label: 'Overview', icon: <LayoutDashboard /> },
+  { id: 'agents', label: 'Agents', icon: <Bot /> },
+  { id: 'apps', label: 'Apps', icon: <Box /> },
+  { id: 'activity', label: 'Activity', icon: <Activity /> },
+]
+
+const WORKSPACES = [
+  { id: 'local', name: 'This Machine', icon: 'C', color: '#674d78', type: 'local', host: 'localhost', desc: 'Your workstation · 2 agents active' },
+  { id: 'homelab', name: 'Homelab', icon: 'H', color: '#274451', type: 'homelab', host: '192.168.1.42', desc: 'Unraid · 15+ services' },
+  { id: 'vps', name: 'VPS', icon: 'V', color: '#4a3f2e', type: 'vps', host: '64.118.132.92', desc: 'Debian · 4 services' },
+]
+
+const initialTasks = [
+  { id: 1, title: 'Build agent status protocol', owner: 'Codex', status: 'In progress', time: 'now' },
+  { id: 2, title: 'Sync homelab services into dashboard', owner: 'System', status: 'In progress', time: 'now' },
+  { id: 3, title: 'Add inline app workspace system', owner: 'You', status: 'In progress', time: 'now' },
+  { id: 4, title: 'Review workspace connections', owner: 'You', status: 'Ready', time: 'today' },
+]
+
+const LOCAL_AGENTS = [
+  { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', iframe: null },
+  { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', iframe: null },
+  { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', iframe: null },
+  { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Checking…', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', iframe: null },
+]
+
+const HOMELAB_SERVICES = [
+  { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Checking…', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', iframe: null },
+  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Checking…', color: '#c084fc', task: 'Model server', usage: '—', port: 3004, group: 'AI', iframe: '/hl-lmstudio/' },
+  { id: 'dify', name: 'Dify', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Checking…', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', iframe: null },
+  { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Checking…', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', iframe: null },
+  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Checking…', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', iframe: '/hl-n8n/' },
+  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Checking…', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', iframe: '/hl-jellyfin/web/' },
+  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Checking…', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', iframe: '/hl-immich/' },
+  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Checking…', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', iframe: null },
+  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Checking…', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', iframe: '/hl-paperless/' },
+  { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Checking…', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', iframe: null },
+  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Checking…', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', iframe: '/hl-hivekeep/' },
+  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Checking…', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', iframe: '/hl-karakeep/' },
+  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Checking…', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', iframe: '/hl-homepage/' },
+  { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', iframe: '/hl-weather/' },
+  { id: 'dify-web', name: 'Dify Web', icon: <Workflow />, kind: 'AI Platform UI', state: 'Running', color: '#60a5fa', task: 'Dify interface', usage: '—', port: 3003, group: 'AI', iframe: '/hl-dify/' },
+  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', iframe: '/hl-convex/' },
+  { id: 'workcover', name: 'Workcover', icon: <Search />, kind: 'Search Engine', state: 'Running', color: '#fb923c', task: 'Document search', usage: '—', port: 3100, group: 'Productivity', iframe: '/hl-search/' },
+  { id: 'localsearch', name: 'Local Search', icon: <Search />, kind: 'File Search', state: 'Running', color: '#a78bfa', task: 'Local file search', usage: '—', port: 3101, group: 'Productivity', iframe: '/hl-local/' },
+  { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', iframe: '/hl-files/' },
+  { id: 'postgres-hl', name: 'PostgreSQL', icon: <Database />, kind: 'Database', state: 'Running', color: '#60a5fa', task: 'Primary DB', usage: '—', port: 5432, group: 'Infrastructure', iframe: null },
+  { id: 'redis-hl', name: 'Redis', icon: <Zap />, kind: 'Cache', state: 'Running', color: '#f87171', task: 'In-memory cache', usage: '—', port: 6379, group: 'Infrastructure', iframe: null },
+  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', iframe: null },
+]
+
+const VPS_SERVICES = [
+  { id: 'openwebui', name: 'Open WebUI', icon: <MessageSquare />, kind: 'AI Chat', state: 'Running', color: '#818cf8', task: 'Chat interface', usage: '—', port: 8080, group: 'AI', iframe: '/vps-openwebui/' },
+  { id: 'langflow', name: 'Langflow', icon: <Workflow />, kind: 'AI Workflows', state: 'Running', color: '#f472b6', task: 'Flow builder', usage: '—', port: 7860, group: 'AI', iframe: '/vps-langflow/' },
+  { id: 'kestra', name: 'Kestra', icon: <RefreshCw />, kind: 'Orchestration', state: 'Running', color: '#a78bfa', task: 'Workflow engine', usage: '—', port: 8085, group: 'Dev', iframe: '/vps-kestra/' },
+  { id: 'vps-nodeapp', name: 'VPS Status', icon: <Monitor />, kind: 'Status Check', state: 'Running', color: '#34d399', task: 'VPS-HKG1 online', usage: '—', port: 3000, group: 'Monitoring', iframe: null },
+]
+
+const HOMELAB_OLLAMA_MODELS = [
+  { name: 'deepseek-r1:7b', size: '7.6B', family: 'qwen2' },
+  { name: 'qwen3.5:4b', size: '4.7B', family: 'qwen35' },
+  { name: 'gemma4:12b', size: '11.9B', family: 'gemma4' },
+  { name: 'qwen2.5:7b', size: '7.6B', family: 'qwen2' },
+  { name: 'qwen3-vl:8b', size: '8.8B', family: 'qwen3vl' },
+  { name: 'ornith:9b', size: '9.0B', family: 'qwen35' },
+  { name: 'lfm2.5:2.6b', size: '2.7B', family: 'lfm2' },
+  { name: 'embeddinggemma', size: '307M', family: 'gemma3' },
+  { name: 'gemma3n:e2b', size: '4.5B', family: 'gemma3n' },
+  { name: 'qwen3.5:0.8b', size: '873M', family: 'qwen35' },
+  { name: 'deepseek-v4-pro:cloud', size: 'Cloud', family: 'cloud' },
+  { name: 'kimi-k2.6:cloud', size: '1T', family: 'kimi-k2' },
+  { name: 'minimax-m2.7:cloud', size: 'Cloud', family: 'minimax' },
+  { name: 'glm-5.2:cloud', size: '756B', family: 'cloud' },
+  { name: 'glm-5.1:cloud', size: 'Cloud', family: 'cloud' },
+]
+
+function Ring({ value, color, label, detail }) {
+  return <div className="metric">
+    <div className="ring" style={{ '--value': `${value * 3.6}deg`, '--ring': color }}><span>{value}%</span></div>
+    <div><strong>{label}</strong><small>{detail}</small></div>
+  </div>
+}
+
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(error) { return { error } }
+  render() {
+    if (this.state.error) return <div style={{ color: '#f2a5a8', padding: '40px', fontFamily: 'DM Mono', fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+      <h3>Error</h3><p>{this.state.error.message}</p><pre>{this.state.error.stack?.split('\n').slice(0, 8).join('\n')}</pre>
+    </div>
+    return this.props.children
+  }
+}
+
+function App() {
+  const [activeTab, setActiveTab] = useState('overview')
+  const [activeWorkspace, setActiveWorkspace] = useState('local')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [tasks, setTasks] = useState(initialTasks)
+  const [newTask, setNewTask] = useState('')
+  const [showComposer, setShowComposer] = useState(false)
+  const [cpu, setCpu] = useState(37)
+  const [ollamaLocal, setOllamaLocal] = useState({ available: false, models: [], active: [] })
+  const [ollamaOpen, setOllamaOpen] = useState(false)
+  const [ollamaModel, setOllamaModel] = useState('')
+  const [ollamaPrompt, setOllamaPrompt] = useState('')
+  const [ollamaReply, setOllamaReply] = useState('')
+  const [ollamaError, setOllamaError] = useState('')
+  const [ollamaBusy, setOllamaBusy] = useState(false)
+  const [activity, setActivity] = useState([
+    ['09:42', 'Codex', 'Started implementation: Agent OS interface'],
+    ['09:38', 'Terminal', 'Started development server on port 5173'],
+    ['09:30', 'System', 'Background health check completed'],
+    ['09:15', 'Ollama', 'Model runtime entered idle state'],
+  ])
+  const [homelabStatus, setHomelabStatus] = useState({})
+  const [hlOllamaModels, setHlOllamaModels] = useState([])
+  const [hlOllamaActive, setHlOllamaActive] = useState([])
+  const [openApps, setOpenApps] = useState([])
+  const [activeAppId, setActiveAppId] = useState(null)
+
+  const now = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  const fetchTO = (url, ms = 5000) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), ms); return fetch(url, { signal: c.signal }).finally(() => clearTimeout(t)) }
+
+  useEffect(() => { const id = setInterval(() => setCpu(v => Math.max(19, Math.min(78, v + Math.round(Math.random() * 14 - 7)))), 1800); return () => clearInterval(id) }, [])
+  useEffect(() => {
+    let c = false; const chk = async () => {
+      try { const [tR, pR] = await Promise.all([fetch('/ollama/api/tags'), fetch('/ollama/api/ps')]); if (!tR.ok || !pR.ok) throw new Error(); const [t, p] = await Promise.all([tR.json(), pR.json()]); if (!c) { const m = t.models || []; setOllamaLocal({ available: true, models: m, active: p.models || [] }); setOllamaModel(v => v || m.find(x => x.name === 'qwen2.5:0.5b')?.name || m[0]?.name || '') } }
+      catch { if (!c) setOllamaLocal({ available: false, models: [], active: [] }) }
+    }; chk(); const id = setInterval(chk, 10000); return () => { c = true; clearInterval(id) }
+  }, [])
+  useEffect(() => {
+    let c = false; const chk = async () => {
+      try {
+        const [o, j, i, n8, hp, lm] = await Promise.allSettled([fetchTO('/hl-ollama/api/tags'), fetchTO('/hl-jellyfin/System/Info/Public'), fetchTO('/hl-immich/api/server-info'), fetchTO('/hl-n8n/healthz'), fetchTO('/hl-homepage/api/status'), fetchTO('/hl-lmstudio/api/v0/models')])
+        if (c) return; const s = {}
+        s['ollama-hl'] = o.status === 'fulfilled' && o.value.ok ? 'Running' : 'Offline'
+        s['jellyfin'] = j.status === 'fulfilled' ? 'Running' : 'Offline'
+        s['immich'] = i.status === 'fulfilled' ? 'Running' : 'Offline'
+        s['n8n'] = n8.status === 'fulfilled' && n8.value.ok ? 'Running' : 'Offline'
+        s['homepage'] = hp.status === 'fulfilled' ? 'Running' : 'Offline'
+        s['lmstudio'] = lm.status === 'fulfilled' && lm.value.ok ? 'Running' : 'Offline'
+        setHomelabStatus(s)
+        if (o.status === 'fulfilled' && o.value.ok) { const d = await o.value.json(); setHlOllamaModels(d.models || []); try { const pR = await fetchTO('/hl-ollama/api/ps'); if (pR.ok) setHlOllamaActive((await pR.json()).models || []) } catch {} }
+      } catch {}
+    }; chk(); const id = setInterval(chk, 15000); return () => { c = true; clearInterval(id) }
+  }, [])
+
+  const localAgents = LOCAL_AGENTS.map(a => a.id === 'ollama-local' ? { ...a, state: ollamaLocal.available ? (ollamaLocal.active.length ? 'Working' : 'Running') : 'Unavailable', task: ollamaLocal.available ? (ollamaLocal.active.length ? `${ollamaLocal.active.length} model loaded` : `${ollamaLocal.models.length} models`) : 'API unavailable', usage: ollamaLocal.active.length ? 'Model loaded' : '—' } : a)
+  const hlSvcs = HOMELAB_SERVICES.map(s => homelabStatus[s.id] ? { ...s, state: homelabStatus[s.id] } : s)
+  const vpsSvcs = VPS_SERVICES.map(s => ({ ...s, workspace: 'vps' }))
+  const allWorkspaceServices = { local: localAgents, homelab: hlSvcs, vps: vpsSvcs }
+  const filteredServices = allWorkspaceServices[activeWorkspace] || []
+  const filteredAgents = filteredServices.filter(s => s.group === 'AI' || s.group === 'Agents')
+  const filteredApps = filteredServices.filter(s => s.group !== 'AI' && s.group !== 'Agents')
+  const ws = WORKSPACES.find(w => w.id === activeWorkspace)
+
+  const openService = (svc) => {
+    if (!svc.iframe) return
+    const exists = openApps.find(a => a.id === svc.id)
+    if (exists) { setActiveAppId(svc.id); return }
+    setOpenApps(a => [...a, { id: svc.id, name: svc.name, icon: svc.icon, iframe: svc.iframe, color: svc.color }])
+    setActiveAppId(svc.id)
+  }
+  const closeApp = (id) => {
+    setOpenApps(a => a.filter(x => x.id !== id))
+    if (activeAppId === id) setActiveAppId(openApps.length > 1 ? openApps.find(a => a.id !== id)?.id || null : null)
+  }
+
+  const addTask = e => { e.preventDefault(); if (!newTask.trim()) return; setTasks(t => [{ id: Date.now(), title: newTask.trim(), owner: 'You', status: 'Queued', time: 'just now' }, ...t]); setActivity(a => [[now(), 'You', `Created task: ${newTask.trim()}`], ...a]); setNewTask(''); setShowComposer(false) }
+  const runTask = t => { setTasks(ts => ts.map(x => x.id === t.id ? { ...x, status: 'In progress', owner: 'Codex' } : x)); setActivity(a => [[now(), 'Codex', `Accepted task: ${t.title}`], ...a]) }
+  const askOllama = async e => { e.preventDefault(); if (!ollamaPrompt.trim() || !ollamaModel || ollamaBusy) return; setOllamaBusy(true); setOllamaError(''); setOllamaReply(''); try { const r = await fetch('/ollama/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: ollamaPrompt.trim(), stream: false }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error || 'no response'); setOllamaReply(d.response || 'No output.'); setActivity(a => [[now(), 'Ollama', `Prompted ${ollamaModel}`], ...a]) } catch (er) { setOllamaError(er.message) } finally { setOllamaBusy(false) } }
+
+  const homelabOnline = Object.values(homelabStatus).filter(s => s === 'Running').length
+  const homelabOffline = Object.values(homelabStatus).filter(s => s === 'Offline').length
+  const activeApp = openApps.find(a => a.id === activeAppId)
+
+  if (!sidebarOpen) return <div className="shell sidebar-collapsed">
+    <button className="expand-sidebar" onClick={() => setSidebarOpen(true)}><Sparkles size={17} /></button>
+    <div style={{ padding: '40px', textAlign: 'center', flex: 1, color: '#89848f' }}>Sidebar collapsed — click the icon to restore</div>
+  </div>
+
+  const renderDashboard = () => <>
+    <header>
+      <div>
+        <p className="eyebrow">{activeWorkspace.toUpperCase()} <span>/</span> {activeTab.toUpperCase()}</p>
+        <h1>{ws?.name === 'This Machine' ? 'Good morning, Chris.' : ws?.name}</h1>
+        <p className="subhead">
+          {activeWorkspace === 'local' && <>Your workspace is healthy. <b>2 agents</b> ready.</>}
+          {activeWorkspace === 'homelab' && <><b>{homelabOnline}</b> online · <b>{homelabOffline}</b> offline</>}
+          {activeWorkspace === 'vps' && <>Debian VM · <b>{vpsSvcs.length} services</b></>}
+        </p>
+      </div>
+      <div className="header-actions">
+        <button className="search"><Search size={17} />Search anything <kbd>Ctrl K</kbd></button>
+        <button className="icon-button"><MessageSquare size={18} /><i /></button>
+        <button className="command"><Command size={17} />Command palette</button>
+      </div>
+    </header>
+    <section className="status-strip">
+      <div className="online">{activeWorkspace === 'homelab' ? <Server size={17} /> : activeWorkspace === 'vps' ? <Globe size={17} /> : <Wifi size={17} />}
+        <span><b>{ws?.host || 'Offline'}</b><small>{activeWorkspace === 'local' ? 'All services responding' : `${filteredServices.length} services`}</small></span>
+      </div>
+      <div className="strip-stat"><Cpu size={17} /><span>CPU <b>{cpu}%</b></span><div className="mini-bar"><i style={{ width: `${cpu}%` }} /></div></div>
+      <div className="strip-stat"><MemoryStick size={17} /><span>Memory <b>6.4 / 16 GB</b></span><div className="mini-bar"><i style={{ width: '40%' }} /></div></div>
+      <div className="strip-stat"><Wifi size={17} /><span>Network <b>18 Mbps</b></span></div>
+    </section>
+
+    {activeTab === 'overview' && <div className="content-grid">
+      <section className="panel apps-panel">
+        <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace === 'homelab' ? 'HOMELAB' : activeWorkspace === 'vps' ? 'VPS' : 'RUNTIME'}</p><h2>{activeWorkspace === 'local' ? 'Apps & agents' : 'Services'}</h2></div><button className="text-button">View all <span>→</span></button></div>
+        <div className="app-list">
+          {filteredServices.map(svc => (
+            <button key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : null}>
+              <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
+              <span className="app-info"><b>{svc.name}</b><small>{svc.kind} · {svc.task}</small></span>
+              <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
+              <span className="usage">{svc.usage}</span>
+              {svc.iframe && <span className="launch-hint">Launch →</span>}
+              <MoreHorizontal size={17} />
+            </button>
+          ))}
+        </div>
+        <div className="selected-app">
+          <div><span className="pulse" /><p><b>{filteredServices[0]?.name}</b> is {filteredServices[0]?.state?.toLowerCase()}</p><small>{filteredServices[0]?.task}</small></div>
+          <button onClick={() => filteredServices[0]?.iframe && openService(filteredServices[0])} disabled={!filteredServices[0]?.iframe}><Play size={15} />Open</button>
+        </div>
+      </section>
+
+      {activeWorkspace === 'local' && ollamaLocal.available && ollamaOpen && <section className="panel ollama-workspace">
+        <div className="panel-heading"><div><p className="eyebrow">LOCAL AI</p><h2>Ollama</h2></div><button onClick={() => setOllamaOpen(false)} className="dots"><X size={18} /></button></div>
+        <form onSubmit={askOllama}>
+          <div className="ollama-controls"><label>MODEL<select value={ollamaModel} onChange={e => setOllamaModel(e.target.value)}>{ollamaLocal.models.map(m => <option value={m.name} key={m.name}>{m.name}</option>)}</select></label><span><i className="live-dot" />Local node</span></div>
+          <textarea value={ollamaPrompt} onChange={e => setOllamaPrompt(e.target.value)} placeholder="Ask your local model…" />
+          <div className="ollama-submit"><small>Runs on this machine via Ollama API.</small><button disabled={ollamaBusy || !ollamaPrompt.trim()}>{ollamaBusy ? 'Thinking…' : 'Run prompt'} <Play size={14} /></button></div>
+        </form>
+        {(ollamaReply || ollamaError) && <div className={`ollama-response ${ollamaError ? 'error' : ''}`}><p>{ollamaError || ollamaReply}</p></div>}
+      </section>}
+
+      <section className="panel health-panel">
+        <div className="panel-heading"><div><p className="eyebrow">THIS MACHINE</p><h2>Resource health</h2></div><button className="dots"><MoreHorizontal /></button></div>
+        <div className="rings"><Ring value={cpu} color="#a595ff" label="Processor" detail="8-core · 3.42 GHz" /><Ring value={40} color="#64d3aa" label="Memory" detail="6.4 of 16 GB" /><Ring value={62} color="#ffb56b" label="Storage" detail="310 of 500 GB" /></div>
+        <div className="uptime"><span><Gauge size={17} />UPTIME</span><b>3 days, 14 hours</b><small>Last health check: just now</small></div>
+      </section>
+
+      <section className="panel tasks-panel">
+        <div className="panel-heading"><div><p className="eyebrow">ORCHESTRATION</p><h2>Task queue <span>{tasks.length}</span></h2></div><button onClick={() => setShowComposer(true)} className="add-task"><Plus size={16} />New task</button></div>
+        {showComposer && <form className="composer" onSubmit={addTask}><input autoFocus value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="What should an agent work on?" /><button type="button" onClick={() => setShowComposer(false)}><X size={16} /></button><button type="submit">Add</button></form>}
+        <div className="task-list">{tasks.map(t => <div className="task" key={t.id}><CircleDot size={18} /><div><b>{t.title}</b><small><span>{t.owner}</span> · {t.time}</small></div><span className={`task-status ${t.status.toLowerCase().replace(' ', '-')}`}>{t.status}</span>{t.status !== 'In progress' && <button onClick={() => runTask(t)} className="run" title="Run"><Play size={14} /></button>}</div>)}</div>
+      </section>
+
+      <section className="panel activity-panel">
+        <div className="panel-heading"><div><p className="eyebrow">AUDIT TRAIL</p><h2>Live activity</h2></div><button className="text-button">Open log <span>→</span></button></div>
+        <div className="timeline">{activity.map(([time, source, message], i) => <div className="event" key={`${time}-${i}`}><time>{time}</time><i className={source.toLowerCase()} /><div><b>{source}</b><span>{message}</span></div></div>)}</div>
+      </section>
+    </div>}
+
+    {activeTab === 'agents' && <div className="content-grid">
+      <section className="panel apps-panel" style={{ gridColumn: '1 / -1' }}>
+        <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>All Agents <span>{filteredAgents.length}</span></h2></div></div>
+        <div className="app-list">{filteredAgents.map(svc => (
+          <div key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : null}>
+            <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
+            <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
+            <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
+            <span className="usage">{svc.task}</span>
+            {svc.port && <span className="port-tag">:{svc.port}</span>}
+            {svc.iframe && <span className="launch-hint">Launch →</span>}
+            <MoreHorizontal size={17} />
+          </div>
+        ))}</div>
+        {activeWorkspace === 'homelab' && hlOllamaModels.length > 0 && <div style={{ borderTop: '1px solid #302e33', marginTop: '16px', paddingTop: '16px' }}>
+          <div className="panel-heading"><div><p className="eyebrow">OLLAMA MODELS</p><h2>{HOMELAB_OLLAMA_MODELS.length} models on homelab</h2></div></div>
+          <div className="model-grid">{HOMELAB_OLLAMA_MODELS.map(m => <div key={m.name} className="model-chip"><Bot size={14} style={{ color: '#8978f3' }} /><div><b>{m.name}</b><small>{m.size} · {m.family}</small></div>{hlOllamaActive.some(a => a.model === m.name) && <span className="live-dot" />}</div>)}</div>
+        </div>}
+      </section>
+    </div>}
+
+    {activeTab === 'apps' && <div className="content-grid">
+      {['System', 'AI', 'Dev', 'Media', 'Productivity', 'Monitoring', 'Infrastructure'].map(group => {
+        const ga = filteredApps.filter(a => a.group === group)
+        if (!ga.length) return null
+        return <section key={group} className="panel apps-panel" style={group === 'AI' ? { gridColumn: '1 / -1' } : {}}>
+          <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>{group}</h2></div></div>
+          <div className="app-list">{ga.map(svc => (
+            <div key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : null}>
+              <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
+              <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
+              <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
+              <span className="usage">{svc.task}</span>
+              {svc.port && <span className="port-tag">:{svc.port}</span>}
+              {svc.iframe && <span className="launch-hint">Launch →</span>}
+              <MoreHorizontal size={17} />
+            </div>
+          ))}</div>
+        </section>
+      })}
+    </div>}
+
+    {activeTab === 'activity' && <div className="content-grid">
+      <section className="panel activity-panel" style={{ gridColumn: '1 / -1' }}>
+        <div className="panel-heading"><div><p className="eyebrow">FULL AUDIT TRAIL</p><h2>All activity</h2></div></div>
+        <div className="timeline" style={{ maxHeight: '600px', overflow: 'auto' }}>{activity.map(([time, source, message], i) => <div className="event" key={`${time}-${i}`}><time>{time}</time><i className={source.toLowerCase()} /><div><b>{source}</b><span>{message}</span></div></div>)}</div>
+      </section>
+    </div>}
+  </>
+
+  return <div className="shell">
+    <aside className="sidebar">
+      <div className="brand"><div className="logo"><Sparkles size={17} /></div><span>ORBITAL</span><button onClick={() => setSidebarOpen(false)}><PanelLeftClose size={17} /></button></div>
+      <nav>
+        {TABS.map(tab => (
+          <button key={tab.id} className={`nav ${activeTab === tab.id && !activeAppId ? 'active' : ''}`} onClick={() => { setActiveTab(tab.id); setActiveAppId(null) }}>
+            {tab.icon}{tab.label}
+            {tab.id === 'agents' && <em>{filteredAgents.length}</em>}
+            {tab.id === 'apps' && <em>{filteredApps.length}</em>}
+          </button>
+        ))}
+      </nav>
+      <div className="side-label">WORKSPACES</div>
+      {WORKSPACES.map(w => (
+        <button key={w.id} className={`workspace ${activeWorkspace === w.id ? 'active' : ''}`} onClick={() => { setActiveWorkspace(w.id); setActiveAppId(null) }}>
+          <span className="workspace-icon" style={{ background: w.color }}>{w.icon}</span>
+          <span>{w.name}<small>{w.desc}</small></span>
+          {w.type !== 'vps' && <span className="ws-dot online" />}
+        </button>
+      ))}
+      <button className="new-workspace"><Plus size={16} />New workspace</button>
+      <div className="sidebar-bottom">
+        <button className="nav"><Settings />Settings</button>
+        <div className="user"><div className="avatar">C</div><span>Chris<small>Local admin</small></span><ChevronDown size={15} /></div>
+      </div>
+      {openApps.length > 0 && <div style={{ borderTop: '1px solid #29282c', marginTop: '12px', paddingTop: '12px' }}>
+        <div className="side-label">OPEN APPS</div>
+        {openApps.map(a => (
+          <button key={a.id} className={`nav ${activeAppId === a.id ? 'active' : ''}`} onClick={() => setActiveAppId(a.id)}>
+            <span style={{ color: a.color }}>{a.icon}</span>{a.name}
+            <button className="close-app-btn" onClick={e => { e.stopPropagation(); closeApp(a.id) }}><X size={12} /></button>
+          </button>
+        ))}
+      </div>}
+    </aside>
+
+    <main style={activeAppId ? { padding: '0', display: 'flex', flexDirection: 'column' } : {}}>
+      <div className="workspace-tabs">
+        <button className={`ws-tab ${!activeAppId ? 'active' : ''}`} onClick={() => setActiveAppId(null)}>
+          <LayoutDashboard size={15} /> Dashboard
+        </button>
+        {openApps.map(a => (
+          <button key={a.id} className={`ws-tab ${activeAppId === a.id ? 'active' : ''}`} onClick={() => setActiveAppId(a.id)}>
+            <span style={{ color: a.color }}>{a.icon}</span> {a.name}
+            <span className="ws-tab-close" onClick={e => { e.stopPropagation(); closeApp(a.id) }}><X size={13} /></span>
+          </button>
+        ))}
+      </div>
+
+      {!activeAppId ? (
+        renderDashboard()
+      ) : (
+        <div className="app-frame-wrapper">
+          {activeApp && activeApp.iframe ? (
+            <div className="app-frame-container">
+              <div className="app-frame-bar">
+                <span style={{ color: activeApp.color, display: 'flex', alignItems: 'center', gap: '6px' }}>{activeApp.icon} {activeApp.name}</span>
+                <span className="app-frame-url">{activeApp.iframe}</span>
+                <button onClick={() => { const f = document.getElementById(`frame-${activeApp.id}`); if (f) f.src = f.src }} title="Reload"><RefreshCw size={14} /></button>
+              </div>
+              <iframe id={`frame-${activeApp.id}`} src={activeApp.iframe} className="app-iframe" title={activeApp.name} />
+            </div>
+          ) : (
+            <div className="panel" style={{ padding: '60px', textAlign: 'center' }}>
+              <h2>{activeApp?.name}</h2>
+              <p style={{ color: '#89848f' }}>This service doesn't have a web interface.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </main>
+  </div>
+}
+
+createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>)
