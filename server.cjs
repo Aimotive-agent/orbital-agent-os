@@ -117,6 +117,12 @@ app.use('/app/:name', function (req, res) {
   req._proxyBase = '/app/' + req.params.name + '/'
   req._proxyTarget = target
   req.url = req.url.replace('/app/' + req.params.name, '') || '/'
+
+  if (req.params.name === 'ollama-hl') {
+    req.url = '/api' + req.url
+    return plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
+  }
+
   proxy.web(req, res, { target, selfHandleResponse: true })
 })
 
