@@ -200,8 +200,17 @@ function App() {
     setActiveAppId(svc.id)
   }
   const handleLocalApp = (svc) => {
-    if (svc.id === 'codex' || svc.id === 'ollama-local') setOllamaOpen(true)
-    else if (svc.id === 'terminal') { setActiveTab('overview') }
+    if (svc.id === 'codex' || svc.id === 'ollama-local') {
+      setLocalAppMode('ai-chat')
+      setOllamaOpen(true)
+      if (!ollamaModel) setOllamaModel(ollamaLocal.available ? (ollamaLocal.models[0]?.name || '') : HOMELAB_OLLAMA_MODELS[0]?.name || '')
+    } else if (svc.id === 'terminal') {
+      setLocalAppMode('terminal')
+      setOllamaOpen(true)
+    } else if (svc.id === 'browser') {
+      setLocalAppMode('browser')
+      setOllamaOpen(true)
+    }
     setActivity(a => [[now(), 'Workspace', `Opened ${svc.name}`], ...a])
   }
   const closeApp = (id) => {
@@ -211,7 +220,7 @@ function App() {
 
   const addTask = e => { e.preventDefault(); if (!newTask.trim()) return; setTasks(t => [{ id: Date.now(), title: newTask.trim(), owner: 'You', status: 'Queued', time: 'just now' }, ...t]); setActivity(a => [[now(), 'You', `Created task: ${newTask.trim()}`], ...a]); setNewTask(''); setShowComposer(false) }
   const runTask = t => { setTasks(ts => ts.map(x => x.id === t.id ? { ...x, status: 'In progress', owner: 'Codex' } : x)); setActivity(a => [[now(), 'Codex', `Accepted task: ${t.title}`], ...a]) }
-  const askOllama = async e => { e.preventDefault(); if (!ollamaPrompt.trim() || !ollamaModel || ollamaBusy) return; setOllamaBusy(true); setOllamaError(''); setOllamaReply(''); try { const r = await fetch('/ollama/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: ollamaPrompt.trim(), stream: false }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error || 'no response'); setOllamaReply(d.response || 'No output.'); setActivity(a => [[now(), 'Ollama', `Prompted ${ollamaModel}`], ...a]) } catch (er) { setOllamaError(er.message) } finally { setOllamaBusy(false) } }
+  const askOllama = async e => { e.preventDefault(); if (!ollamaPrompt.trim() || !ollamaModel || ollamaBusy) return; setOllamaBusy(true); setOllamaError(''); setOllamaReply(''); const apiBase = ollamaLocal.available ? '/ollama' : '/hl-ollama'; try { const r = await fetch(apiBase + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: ollamaPrompt.trim(), stream: false }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error || 'no response'); setOllamaReply(d.response || 'No output.'); setActivity(a => [[now(), 'Ollama', `Prompted ${ollamaModel}`], ...a]) } catch (er) { setOllamaError(er.message) } finally { setOllamaBusy(false) } }
 
   const homelabOnline = Object.values(homelabStatus).filter(s => s === 'Running').length
   const homelabOffline = Object.values(homelabStatus).filter(s => s === 'Offline').length
@@ -269,14 +278,46 @@ function App() {
         </div>
       </section>
 
-      {activeWorkspace === 'local' && ollamaLocal.available && ollamaOpen && <section className="panel ollama-workspace">
-        <div className="panel-heading"><div><p className="eyebrow">LOCAL AI</p><h2>Ollama</h2></div><button onClick={() => setOllamaOpen(false)} className="dots"><X size={18} /></button></div>
-        <form onSubmit={askOllama}>
-          <div className="ollama-controls"><label>MODEL<select value={ollamaModel} onChange={e => setOllamaModel(e.target.value)}>{ollamaLocal.models.map(m => <option value={m.name} key={m.name}>{m.name}</option>)}</select></label><span><i className="live-dot" />Local node</span></div>
-          <textarea value={ollamaPrompt} onChange={e => setOllamaPrompt(e.target.value)} placeholder="Ask your local model…" />
-          <div className="ollama-submit"><small>Runs on this machine via Ollama API.</small><button disabled={ollamaBusy || !ollamaPrompt.trim()}>{ollamaBusy ? 'Thinking…' : 'Run prompt'} <Play size={14} /></button></div>
-        </form>
-        {(ollamaReply || ollamaError) && <div className={`ollama-response ${ollamaError ? 'error' : ''}`}><p>{ollamaError || ollamaReply}</p></div>}
+      {activeWorkspace === 'local' && ollamaOpen && <section className="panel ollama-workspace">
+        <div className="panel-heading"><div><p className="eyebrow">AI CHAT</p><h2>{localAppMode === 'ai-chat' ? 'AI Assistant' : 'Terminal'}</h2></div><button onClick={() => { setOllamaOpen(false); setLocalAppMode(null) }} className="dots"><X size={18} /></button></div>
+        {localAppMode === 'ai-chat' && <>
+          {!ollamaLocal.available && <div style={{ padding: '12px 16px', background: '#1a1720', borderRadius: '8px', marginBottom: '8px', fontSize: '12px', color: '#8b8792' }}>
+            <b style={{ color: '#ffb870' }}>Local Ollama offline.</b> Using Homelab Ollama (17 models available).
+          </div>}
+          <form onSubmit={askOllama}>
+            <div className="ollama-controls">
+              <label>MODEL
+                <select value={ollamaModel} onChange={e => setOllamaModel(e.target.value)}>
+                  {(ollamaLocal.available ? ollamaLocal.models : HOMELAB_OLLAMA_MODELS).map(m => {
+                    const name = typeof m === 'string' ? m : m.name
+                    return <option value={name} key={name}>{name}</option>
+                  })}
+                </select>
+              </label>
+              <span><i className="live-dot" />{ollamaLocal.available ? 'Local node' : 'Homelab node'}</span>
+            </div>
+            <textarea value={ollamaPrompt} onChange={e => setOllamaPrompt(e.target.value)} placeholder="Ask any question…" />
+            <div className="ollama-submit"><small>{ollamaLocal.available ? 'Runs locally' : 'Runs on homelab'} via Ollama API.</small><button disabled={ollamaBusy || !ollamaPrompt.trim()}>{ollamaBusy ? 'Thinking…' : 'Send'} <Play size={14} /></button></div>
+          </form>
+          {(ollamaReply || ollamaError) && <div className={`ollama-response ${ollamaError ? 'error' : ''}`}><p>{ollamaError || ollamaReply}</p></div>}
+        </>}
+        {localAppMode === 'terminal' && <div style={{ padding: '16px', background: '#1a1720', borderRadius: '8px', fontFamily: 'DM Mono', fontSize: '12px', lineHeight: '1.7', color: '#86d5b2' }}>
+          <div><b style={{ color: '#a595ff' }}>$</b> uname -a</div>
+          <div>Linux chrispc-workstation 6.13.8 x86_64</div>
+          <div style={{ marginTop: '8px' }}><b style={{ color: '#a595ff' }}>$</b> node -v</div>
+          <div>v22.23.2</div>
+          <div style={{ marginTop: '8px' }}><b style={{ color: '#a595ff' }}>$</b> free -h</div>
+          <div>Mem: 16G · Used: 6.4G · Free: 9.6G</div>
+          <div style={{ marginTop: '8px' }}><b style={{ color: '#a595ff' }}>$</b> df -h /</div>
+          <div>Disk: 310G / 500G (62%)</div>
+          <div style={{ marginTop: '8px' }}><b style={{ color: '#a595ff' }}>$</b> uptime</div>
+          <div>3 days, 14 hours</div>
+          <div style={{ marginTop: '8px', color: '#8b8792' }}>CPU: {cpu}% · Vite dev server active</div>
+        </div>}
+        {localAppMode === 'browser' && <div style={{ padding: '16px', background: '#1a1720', borderRadius: '8px', fontFamily: 'DM Mono', fontSize: '12px', color: '#78b7ff', lineHeight: '1.7' }}>
+          <div style={{ marginBottom: '8px', color: '#8b8792' }}>Web Browser</div>
+          <iframe src="https://www.google.com" style={{ width: '100%', height: '400px', border: '1px solid #302e33', borderRadius: '8px', background: '#fff' }} />
+        </div>}
       </section>}
 
       <section className="panel health-panel">

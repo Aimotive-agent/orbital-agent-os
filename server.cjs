@@ -5,6 +5,7 @@ const path = require('path')
 
 const app = express()
 const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false, selfHandleResponse: true })
+const plainProxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false })
 
 const targets = {
   jellyfin: 'http://192.168.1.42:8096',
@@ -51,21 +52,22 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
 
   if (isHTML) {
     delete proxyRes.headers['content-length']
-    let body = ''
-    proxyRes.on('data', chunk => { body += chunk.toString() })
+    let chunks = []
+    proxyRes.on('data', chunk => chunks.push(chunk))
     proxyRes.on('end', () => {
       try {
+        let body = Buffer.concat(chunks).toString()
         const $ = cheerio.load(body)
         if ($('base').length === 0) {
           $('head').prepend(`<base href="${base}">`)
         }
         $('[src^="/"]').each((i, el) => {
           const src = $(el).attr('src')
-          if (!src.startsWith(base)) $(el).attr('src', base + src.replace(/^\//, ''))
+          if (src && !src.startsWith(base)) $(el).attr('src', base + src.replace(/^\//, ''))
         })
         $('[href^="/"]').each((i, el) => {
           const href = $(el).attr('href')
-          if (href && !href.startsWith(base)) $(el).attr('href', base + href.replace(/^\//, ''))
+          if (href && !href.startsWith(base) && !href.startsWith('#')) $(el).attr('href', base + href.replace(/^\//, ''))
         })
         $('form[action^="/"]').each((i, el) => {
           const action = $(el).attr('action')
@@ -75,7 +77,7 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
         res.end($.html())
       } catch {
         res.writeHead(proxyRes.statusCode, proxyRes.headers)
-        res.end(body)
+        res.end(Buffer.concat(chunks))
       }
     })
   } else {
@@ -85,21 +87,23 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
 })
 
 proxy.on('error', function (err, req, res) {
-  if (!res.headersSent) {
-    res.writeHead(503, { 'Content-Type': 'text/plain' })
-    res.end('Service unavailable')
-  }
+  if (!res.headersSent) { res.writeHead(503); res.end('Service unavailable') }
 })
 
 app.use('/app/:name', function (req, res) {
   const target = targets[req.params.name]
-  if (!target) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' })
-    return res.end('Service not found')
-  }
+  if (!target) { res.writeHead(404); return res.end('Service not found') }
   req._proxyBase = '/app/' + req.params.name + '/'
   req.url = req.url.replace('/app/' + req.params.name, '') || '/'
   proxy.web(req, res, { target, selfHandleResponse: true })
+})
+
+app.use('/ollama/api', function (req, res) {
+  plainProxy.web(req, res, { target: 'http://localhost:11434', changeOrigin: true })
+})
+
+app.use('/hl-ollama/api', function (req, res) {
+  plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
 })
 
 app.use(express.static(path.join(__dirname, 'dist')))
