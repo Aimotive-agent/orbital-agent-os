@@ -29,6 +29,11 @@ const targets = {
   nextcloud: 'http://192.168.1.42:8866',
 }
 
+proxy.on('proxyReq', function (proxyReq, req, res, options) {
+  proxyReq.removeHeader('accept-encoding')
+  proxyReq.removeHeader('Accept-Encoding')
+})
+
 proxy.on('proxyRes', function (proxyRes, req, res) {
   const base = req._proxyBase || '/'
 
