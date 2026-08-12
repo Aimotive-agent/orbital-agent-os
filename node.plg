@@ -1,0 +1,42 @@
+<!DOCTYPE PLUGIN [
+<!ENTITY name "nodejs">
+<!ENTITY version "22.13.0">
+<!ENTITY author "orbital">
+<!ENTITY pluginURL "https://raw.githubusercontent.com/Aimotive-agent/orbital-agent-os/main/node.plg">
+]>
+<PLUGIN name="&name;" version="&version;" author="&author;" pluginURL="&pluginURL;">
+<DESCRIPTION>Node.js 22.13.0 static binary for OpenShip builds on Unraid</DESCRIPTION>
+<EXECUTE>
+#!/bin/bash
+set -e
+BIN_URL="https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-x64.tar.xz"
+INSTALL_DIR="/usr/local"
+PERSIST_SCRIPT="/boot/config/plugins/node/install.sh"
+echo "[node.plg] installing Node v22.13.0..."
+curl -fsSL -o /tmp/node.tar.xz "$BIN_URL"
+rm -rf "$INSTALL_DIR/bin/node" "$INSTALL_DIR/lib/node_modules" "$INSTALL_DIR/include/node" "$INSTALL_DIR/share"
+tar -xJf /tmp/node.tar.xz -C "$INSTALL_DIR" --strip-components=1
+ln -sf "$INSTALL_DIR/bin/node" /usr/bin/node
+ln -sf "$INSTALL_DIR/bin/npm" /usr/bin/npm
+ln -sf "$INSTALL_DIR/bin/npx" /usr/bin/npx
+rm -f /tmp/node.tar.xz
+echo "[node.plg] $(node -v) $(npm -v) installed to $INSTALL_DIR"
+echo "[node.plg] setting up Unraid reboot persistence..."
+mkdir -p /boot/config/plugins/node
+cat > "$PERSIST_SCRIPT" << 'PERSIST_EOF'
+#!/bin/bash
+BIN_URL="https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-x64.tar.xz"
+INSTALL_DIR="/usr/local"
+if [ ! -f "$INSTALL_DIR/bin/node" ]; then
+  curl -fsSL -o /tmp/node.tar.xz "$BIN_URL" && tar -xJf /tmp/node.tar.xz -C "$INSTALL_DIR" --strip-components=1 && rm /tmp/node.tar.xz
+  ln -sf "$INSTALL_DIR/bin/node" /usr/bin/node
+  ln -sf "$INSTALL_DIR/bin/npm" /usr/bin/npm
+fi
+PERSIST_EOF
+chmod +x "$PERSIST_SCRIPT"
+if ! grep -q "plugins/node/install.sh" /boot/config/go 2>/dev/null; then
+  echo "/boot/config/plugins/node/install.sh" >> /boot/config/go
+fi
+echo "[node.plg] persistence configured — Node will survive Unraid reboots"
+</EXECUTE>
+</PLUGIN>
