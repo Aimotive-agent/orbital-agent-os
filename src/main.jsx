@@ -226,10 +226,7 @@ function App() {
   const homelabOffline = Object.values(homelabStatus).filter(s => s === 'Offline').length
   const activeApp = openApps.find(a => a.id === activeAppId)
 
-  if (!sidebarOpen) return <div className="shell sidebar-collapsed">
-    <button className="expand-sidebar" onClick={() => setSidebarOpen(true)}><Sparkles size={17} /></button>
-    <div style={{ padding: '40px', textAlign: 'center', flex: 1, color: '#89848f' }}>Sidebar collapsed — click the icon to restore</div>
-  </div>
+
 
   const renderDashboard = () => <>
     <header>
@@ -475,7 +472,8 @@ function App() {
 
   </>
 
-  return <div className="shell">
+  return <div className={`shell ${!sidebarOpen ? 'sidebar-collapsed' : ''}`}>
+    <button className="expand-sidebar" onClick={() => setSidebarOpen(true)}><Sparkles size={17} /></button>
     <aside className="sidebar">
       <div className="brand"><div className="logo"><Sparkles size={17} /></div><span>ORBITAL</span><button onClick={() => setSidebarOpen(false)}><PanelLeftClose size={17} /></button></div>
       <nav>
