@@ -175,7 +175,7 @@ app.use('/hl-ollama/api', function (req, res) {
 
 app.use('/hl-lmstudio', function (req, res) {
   req.url = req.url || '/'
-  plainProxy.web(req, res, { target: 'http://192.168.1.42:1234', changeOrigin: true })
+  plainProxy.web(req, res, { target: 'http://172.23.0.8:1234', changeOrigin: true })
 })
 
 app.post('/api/login', express.json(), function (req, res) {

@@ -249,7 +249,7 @@ function App() {
   useEffect(() => {
     let c = false; const chk = async () => {
       try {
-        const [o, j, i, n8, hp, lm] = await Promise.allSettled([fetchTO('/hl-ollama/api/tags'), fetchTO('/hl-jellyfin/System/Info/Public'), fetchTO('/hl-immich/api/server-info'), fetchTO('/hl-n8n/healthz'), fetchTO('/hl-homepage/api/status'), fetchTO('/hl-lmstudio/api/v0/models')])
+        const [o, j, i, n8, hp, lm] = await Promise.allSettled([fetchTO('/hl-ollama/api/tags'), fetchTO('/hl-jellyfin/System/Info/Public'), fetchTO('/hl-immich/api/server-info'), fetchTO('/hl-n8n/healthz'), fetchTO('/hl-homepage/api/status'), fetchTO('/hl-lmstudio/v1/models')])
         if (c) return; const s = {}
         s['ollama-hl'] = o.status === 'fulfilled' && o.value.ok ? 'Running' : 'Offline'
         s['jellyfin'] = j.status === 'fulfilled' ? 'Running' : 'Offline'
