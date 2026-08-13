@@ -195,6 +195,16 @@ function App() {
   const [authState, setAuthState] = useState(localStorage.getItem('orbital_token') ? 'checking' : 'loggedout')
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [paletteQuery, setPaletteQuery] = useState('')
+  const [paletteMode, setPaletteMode] = useState('search')
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatInput, setChatInput] = useState('')
+  const [chatBusy, setChatBusy] = useState(false)
+  const [chatError, setChatError] = useState('')
+  const [chatMessages, setChatMessages] = usePersistentState('orbital_chat', [])
+  const [customCommands, setCustomCommands] = usePersistentState('orbital_commands', [])
+  const [showAddCommand, setShowAddCommand] = useState(false)
+  const [newCommand, setNewCommand] = useState({ label: '', url: '' })
+  const [editingCommand, setEditingCommand] = useState(null)
 
   const [providers, setProviders] = usePersistentState('orbital_providers', [
     { id: 'ollama-local', name: 'Ollama (Local)', endpoint: 'http://localhost:11434', models: 'auto', status: 'Connected' },
@@ -262,8 +272,8 @@ function App() {
 
   useEffect(() => {
     const h = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(o => !o) }
-      else if (e.key === 'Escape') { setPaletteOpen(false) }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteMode('search'); setPaletteOpen(o => !o) }
+      else if (e.key === 'Escape') { setPaletteOpen(false); setChatOpen(false) }
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
@@ -327,22 +337,30 @@ function App() {
   const allServices = [...localAgentsBase, ...homelabBase, ...vpsBase, ...customApps]
 
   const q = paletteQuery.trim().toLowerCase()
-  const paletteItems = []
-  TABS.forEach(t => { if (!q || t.label.toLowerCase().includes(q) || t.id.includes(q)) paletteItems.push({ type: 'tab', id: t.id, label: 'Go to ' + t.label, icon: t.icon, hint: 'View' }) })
-  WORKSPACES.forEach(w => { if (!q || w.name.toLowerCase().includes(q) || w.id.includes(q)) paletteItems.push({ type: 'workspace', id: w.id, label: 'Switch to ' + w.name, icon: <span style={{ background: w.color }} className="palette-ws">{w.icon}</span>, hint: 'Workspace' }) })
+
+  const searchItems = []
+  TABS.forEach(t => { if (!q || t.label.toLowerCase().includes(q) || t.id.includes(q)) searchItems.push({ type: 'tab', id: t.id, label: 'Go to ' + t.label, icon: t.icon, hint: 'View' }) })
+  WORKSPACES.forEach(w => { if (!q || w.name.toLowerCase().includes(q) || w.id.includes(q)) searchItems.push({ type: 'workspace', id: w.id, label: 'Switch to ' + w.name, icon: <span style={{ background: w.color }} className="palette-ws">{w.icon}</span>, hint: 'Workspace' }) })
   allServices.forEach(s => {
     if (!q || s.name.toLowerCase().includes(q) || (s.kind || '').toLowerCase().includes(q)) {
-      paletteItems.push({ type: 'app', id: s.id, label: s.name, icon: iconOf(s), hint: s.kind + (s.url ? '' : ' · no UI'), color: s.color, svc: s })
+      searchItems.push({ type: 'app', id: s.id, label: s.name, icon: iconOf(s), hint: s.kind + (s.url ? '' : ' · no UI'), color: s.color, svc: s })
     }
   })
-  const paletteCommands = [
-    { type: 'command', id: 'new-task', label: 'New task', icon: <Plus />, hint: 'Command', run: () => setShowComposer(true) },
-    { type: 'command', id: 'add-app', label: 'Add custom app', icon: <Box />, hint: 'Command', run: () => { setActiveTab('settings'); setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], emoji: '', kind: '', group: '', port: '' }) } },
-    { type: 'command', id: 'settings', label: 'Open settings', icon: <Settings />, hint: 'Command', run: () => { setActiveTab('settings'); setActiveAppId(null) } },
-    { type: 'command', id: 'toggle-sidebar', label: 'Toggle sidebar', icon: <PanelLeftClose />, hint: 'Command', run: () => setSidebarOpen(o => !o) },
-    { type: 'command', id: 'logout', label: 'Sign out', icon: <LogOut />, hint: 'Command', run: doLogout },
+
+  const builtinCommands = [
+    { id: 'new-task', label: 'New task', icon: <Plus />, run: () => setShowComposer(true) },
+    { id: 'add-app', label: 'Add custom app', icon: <Box />, run: () => { setActiveTab('settings'); setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], emoji: '', kind: '', group: '', port: '' }) } },
+    { id: 'ai-chat', label: 'Open AI chat', icon: <MessageSquare />, run: () => setChatOpen(true) },
+    { id: 'add-command', label: 'Add command', icon: <Command />, run: () => { setActiveTab('settings'); setActiveAppId(null); setShowAddCommand(true) } },
+    { id: 'settings', label: 'Open settings', icon: <Settings />, run: () => { setActiveTab('settings'); setActiveAppId(null) } },
+    { id: 'toggle-sidebar', label: 'Toggle sidebar', icon: <PanelLeftClose />, run: () => setSidebarOpen(o => !o) },
+    { id: 'logout', label: 'Sign out', icon: <LogOut />, run: doLogout },
   ]
-  paletteCommands.forEach(c => { if (!q || c.label.toLowerCase().includes(q)) paletteItems.push(c) })
+  const commandItems = []
+  builtinCommands.forEach(c => { if (!q || c.label.toLowerCase().includes(q)) commandItems.push({ type: 'command', id: c.id, label: c.label, icon: c.icon, hint: 'Action', run: c.run }) })
+  customCommands.forEach(c => { if (!q || c.label.toLowerCase().includes(q)) commandItems.push({ type: 'custom', id: c.id, label: c.label, icon: <ArrowRight />, hint: 'Command', url: c.url }) })
+
+  const paletteItems = paletteMode === 'command' ? commandItems : searchItems
 
   const runPaletteItem = (item) => {
     setPaletteOpen(false)
@@ -355,6 +373,27 @@ function App() {
       else if (item.svc) { setActiveWorkspace(item.svc.workspace?.[0] || 'local') }
     }
     else if (item.type === 'command' && item.run) item.run()
+    else if (item.type === 'custom' && item.url) window.open(item.url, '_blank')
+  }
+
+  const sendChat = async (e) => {
+    e.preventDefault()
+    const text = chatInput.trim()
+    if (!text || !ollamaModel || chatBusy) return
+    setChatInput('')
+    setChatBusy(true)
+    setChatError('')
+    setChatMessages(m => [...m, { role: 'user', content: text }])
+    const apiBase = ollamaLocal.available ? '/ollama' : '/app/ollama-hl'
+    try {
+      const r = await fetch(apiBase + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: text, stream: false }) })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || d.message || 'Request failed')
+      setChatMessages(m => [...m, { role: 'assistant', content: d.response || 'No response from model.' }])
+      setActivity(a => [[now(), 'Ollama', `Chat: ${text.slice(0, 40)}`], ...a])
+    } catch (er) {
+      setChatError(er.message || 'Connection failed — is Ollama running?')
+    } finally { setChatBusy(false) }
   }
 
   const addTask = e => { e.preventDefault(); if (!newTask.trim()) return; setTasks(t => [{ id: Date.now(), title: newTask.trim(), owner: 'You', status: 'Queued', time: 'just now' }, ...t]); setActivity(a => [[now(), 'You', `Created task: ${newTask.trim()}`], ...a]); setNewTask(''); setShowComposer(false) }
@@ -379,9 +418,9 @@ function App() {
         </p>
       </div>
       <div className="header-actions">
-        <button className="search" onClick={() => setPaletteOpen(true)}><Search size={17} />Search anything <kbd>Ctrl K</kbd></button>
-        <button className="icon-button"><MessageSquare size={18} /><i /></button>
-        <button className="command" onClick={() => setPaletteOpen(true)}><Command size={17} />Command palette</button>
+        <button className="search" onClick={() => { setPaletteMode('search'); setPaletteOpen(true) }}><Search size={17} />Search anything <kbd>Ctrl K</kbd></button>
+        <button className="icon-button" onClick={() => setChatOpen(true)} title="AI chat"><MessageSquare size={18} /><i /></button>
+        <button className="command" onClick={() => { setPaletteMode('command'); setPaletteOpen(true) }}><Command size={17} />Command palette</button>
       </div>
     </header>
     <section className="status-strip">
@@ -629,6 +668,33 @@ function App() {
           </div>)}
         </div>
       </section>
+
+      <section className="panel" style={{ gridColumn: '1 / -1' }}>
+        <div className="panel-heading"><div><p className="eyebrow">COMMANDS</p><h2>Command Palette</h2></div><button onClick={() => { setShowAddCommand(true); setNewCommand({ label: '', url: '' }) }} className="add-task"><Plus size={16} />Add</button></div>
+        {showAddCommand && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px' }}>
+          <input value={newCommand.label} onChange={e => setNewCommand({ ...newCommand, label: e.target.value })} placeholder="Command name (e.g. Open Jellyfin)" style={{ flex: '1 1 160px' }} />
+          <input value={newCommand.url} onChange={e => setNewCommand({ ...newCommand, url: e.target.value })} placeholder="URL to open" style={{ flex: '1 1 240px' }} />
+          <button type="button" onClick={() => { setShowAddCommand(false); setNewCommand({ label: '', url: '' }) }}><X size={16} /></button>
+          <button type="submit" onClick={() => { if (newCommand.label) { setCustomCommands(c => [...c, { id: 'cmd-' + Date.now(), label: newCommand.label, url: newCommand.url || null }]); setShowAddCommand(false); setNewCommand({ label: '', url: '' }); setActivity(a => [[now(), 'Settings', `Added command: ${newCommand.label}`], ...a]) } }}>Save</button>
+        </div>}
+        {editingCommand && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px', borderColor: '#5e5285' }}>
+          <span style={{ fontSize: '11px', color: '#8978f3', width: '100%' }}>Editing command</span>
+          <input value={editingCommand.label} onChange={e => setEditingCommand({ ...editingCommand, label: e.target.value })} placeholder="Command name" style={{ flex: '1 1 160px' }} />
+          <input value={editingCommand.url || ''} onChange={e => setEditingCommand({ ...editingCommand, url: e.target.value || null })} placeholder="URL to open" style={{ flex: '1 1 240px' }} />
+          <button type="button" onClick={() => setEditingCommand(null)}><X size={16} /></button>
+          <button type="submit" onClick={() => { setCustomCommands(cs => cs.map(c => c.id === editingCommand.id ? editingCommand : c)); setEditingCommand(null) }} style={{ background: '#3d355c', color: '#e1daff', borderRadius: '6px', padding: '0 13px', fontSize: '11px' }}><Check size={14} /> Save</button>
+        </div>}
+        <div className="app-list">
+          {customCommands.map(c => <div key={c.id} className="app-row">
+            <span className="app-icon" style={{ color: '#8978f3', background: '#8978f317' }}><ArrowRight size={18} /></span>
+            <span className="app-info"><b>{c.label}</b><small>{c.url || 'No URL'}</small></span>
+            <button onClick={() => c.url ? window.open(c.url, '_blank') : null} className="run" title="Run"><Play size={14} /></button>
+            <button onClick={() => setEditingCommand({ ...c })} style={{ background: 'transparent', border: 0, color: '#8978f3', padding: '4px', borderRadius: '4px' }} title="Edit"><Settings size={14} /></button>
+            <button onClick={() => setCustomCommands(cs => cs.filter(x => x.id !== c.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>
+          </div>)}
+          {customCommands.length === 0 && <div style={{ padding: '14px', color: '#8b8792', fontSize: '12px' }}>No custom commands yet. Add one and it'll show in the Command palette (top-right).</div>}
+        </div>
+      </section>
     </div>}
 
   </>
@@ -659,7 +725,6 @@ function App() {
       ))}
       <button className="new-workspace"><Plus size={16} />New workspace</button>
       <div className="sidebar-bottom">
-        <button className="nav" onClick={() => { setActiveTab('settings'); setActiveAppId(null) }}><Settings />Settings</button>
         <button className="nav" onClick={doLogout}><LogOut />Sign out</button>
         <div className="user"><div className="avatar">C</div><span>Chris<small>Local admin</small></span><ChevronDown size={15} /></div>
       </div>
@@ -712,7 +777,11 @@ function App() {
 
     {paletteOpen && <div className="palette-overlay" onClick={() => setPaletteOpen(false)}>
       <div className="palette" onClick={e => e.stopPropagation()}>
-        <div className="palette-input"><Search size={16} /><input autoFocus value={paletteQuery} onChange={e => setPaletteQuery(e.target.value)} placeholder="Search apps, agents, tabs, commands…" /><kbd>esc</kbd></div>
+        <div className="palette-input">
+          {paletteMode === 'command' ? <Command size={16} /> : <Search size={16} />}
+          <input autoFocus value={paletteQuery} onChange={e => setPaletteQuery(e.target.value)} placeholder={paletteMode === 'command' ? 'Type a command or search…' : 'Search apps, agents, tabs, workspaces…'} />
+          <kbd>esc</kbd>
+        </div>
         <div className="palette-results">
           {paletteItems.map((item, i) => (
             <button key={item.type + '-' + item.id + '-' + i} className="palette-item" onClick={() => runPaletteItem(item)}>
@@ -723,6 +792,34 @@ function App() {
           ))}
           {paletteItems.length === 0 && <div className="palette-empty">No results for "{paletteQuery}"</div>}
         </div>
+        {paletteMode === 'command' && <div className="palette-footer">
+          <button onClick={() => { setPaletteOpen(false); setPaletteQuery(''); setActiveTab('settings'); setActiveAppId(null); setShowAddCommand(true) }}><Plus size={14} /> Add new command</button>
+        </div>}
+      </div>
+    </div>}
+
+    {chatOpen && <div className="chat-overlay" onClick={() => setChatOpen(false)}>
+      <div className="chat-panel" onClick={e => e.stopPropagation()}>
+        <div className="chat-header">
+          <span className="chat-title"><span className="logo"><Sparkles size={13} /></span> AI Assistant</span>
+          <select value={ollamaModel} onChange={e => setOllamaModel(e.target.value)} className="chat-model">
+            {(ollamaLocal.available ? ollamaLocal.models : HOMELAB_OLLAMA_MODELS).map(m => {
+              const name = typeof m === 'string' ? m : m.name
+              return <option key={name} value={name}>{name}</option>
+            })}
+          </select>
+          <button className="chat-close" onClick={() => setChatOpen(false)}><X size={18} /></button>
+        </div>
+        <div className="chat-messages">
+          {chatMessages.length === 0 && <div className="chat-empty">Ask anything. Runs on {ollamaLocal.available ? 'local Ollama' : 'Homelab Ollama'}.</div>}
+          {chatMessages.map((m, i) => <div key={i} className={`chat-msg ${m.role}`}><span className="chat-role">{m.role === 'user' ? 'You' : 'AI'}</span><p>{m.content}</p></div>)}
+          {chatBusy && <div className="chat-msg assistant"><span className="chat-role">AI</span><p className="chat-thinking">Thinking…</p></div>}
+          {chatError && <div className="chat-error">{chatError}</div>}
+        </div>
+        <form className="chat-input" onSubmit={sendChat}>
+          <textarea value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(e) } }} placeholder="Message the assistant…" rows={2} />
+          <button type="submit" disabled={chatBusy || !chatInput.trim()}><Play size={15} /></button>
+        </form>
       </div>
     </div>}
   </div>
