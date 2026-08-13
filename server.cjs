@@ -4,8 +4,8 @@ const cheerio = require('cheerio')
 const path = require('path')
 
 const app = express()
-const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false, selfHandleResponse: true })
-const plainProxy = httpProxy.createProxyServer({ changeOrigin: true, ws: false })
+const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: true, selfHandleResponse: true })
+const plainProxy = httpProxy.createProxyServer({ changeOrigin: true, ws: true })
 
 const targets = {
   jellyfin: 'http://192.168.1.42:8096',
@@ -28,11 +28,15 @@ const targets = {
   openship: 'http://192.168.1.42:3148',
   nextcloud: 'http://192.168.1.42:8866',
   'ollama-hl': 'http://192.168.1.42:11434',
+  opencode: 'http://192.168.1.33:36783',
+  hermes: 'http://192.168.1.33:9119',
+  unsloth: 'http://192.168.1.33:8888',
+  t3code: 'http://192.168.1.33:3773',
 }
 
 function buildPatchScript(base) {
   const b = JSON.stringify(base)
-  return `(function(){var b=${b};function r(u){if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length);if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}})();`
+  return `(function(){var b=${b};function r(u){if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length).replace(/^\\//,'');if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);var wm=u.match(/^(wss?:\\/\\/[^/]+)(\\/.*|$)/);if(wm&&wm[2].indexOf(b)!==0)return wm[1]+b+wm[2].slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}var ow=window.WebSocket;if(ow){window.WebSocket=function(u,p){return new ow(r(u),p);};window.WebSocket.prototype=ow.prototype;window.WebSocket.CONNECTING=ow.CONNECTING;window.WebSocket.OPEN=ow.OPEN;window.WebSocket.CLOSING=ow.CLOSING;window.WebSocket.CLOSED=ow.CLOSED;}})();`
 }
 
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
@@ -151,6 +155,21 @@ app.get('*', function (req, res) {
 })
 
 const PORT = process.env.PORT || 5173
-app.listen(PORT, '0.0.0.0', function () {
+const server = app.listen(PORT, '0.0.0.0', function () {
   console.log('Orbital Agent OS running on port ' + PORT)
+})
+
+server.on('upgrade', function (req, socket, head) {
+  const url = req.url || ''
+  const m = url.match(/^\/app\/([^/]+)/)
+  if (!m) {
+    if (url.indexOf('/ollama/') === 0) return plainProxy.ws(req, socket, head, { target: 'http://localhost:11434' })
+    if (url.indexOf('/hl-ollama/') === 0) return plainProxy.ws(req, socket, head, { target: 'http://192.168.1.42:11434' })
+    return socket.destroy()
+  }
+  const name = m[1]
+  const target = targets[name]
+  if (!target) { return socket.destroy() }
+  req.url = url.replace('/app/' + name, '') || '/'
+  proxy.ws(req, socket, head, { target })
 })
