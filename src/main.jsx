@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   Activity, Bot, Box, ChevronDown, CircleDot, Code2, Command, Cpu,
@@ -7,7 +7,7 @@ import {
   Sparkles, Terminal, Wifi, X, Server, Globe, Zap, Database,
   Film, Camera, FileText, BookOpen, Workflow, Brain, Cloud,
   FolderOpen, RefreshCw, ArrowRight, Home, Monitor, Key, Link, Trash2, Check, ClipboardCopy,
-  Lock, LogOut
+  Lock, LogOut, ExternalLink
 } from 'lucide-react'
 import './styles.css'
 
@@ -49,7 +49,7 @@ const HOMELAB_SERVICES = [
   { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Running', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', url: null },
   { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 1234, group: 'AI', url: null },
   { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Running', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', url: null },
-  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', url: 'https://n8n.veritasglobalai.com/' },
+  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', url: '/app/n8n/' },
   { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', url: 'https://jellyfin.veritasglobalai.com/' },
   { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', url: 'https://immich.veritasglobalai.com/' },
   { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', url: 'https://nextcloud.veritasglobalai.com/' },
@@ -59,7 +59,7 @@ const HOMELAB_SERVICES = [
   { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Running', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', url: 'https://karakeep.veritasglobalai.com/' },
   { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Running', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', url: 'https://homepage.veritasglobalai.com/' },
   { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', url: 'https://weather.veritasglobalai.com/' },
-  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', url: 'https://convex.veritasglobalai.com/' },
+  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', url: '/app/convex/' },
   { id: 'workcover', name: 'Workcover', icon: <Search />, kind: 'Search Engine', state: 'Running', color: '#fb923c', task: 'Document search', usage: '—', port: 3100, group: 'Productivity', url: 'https://workcover.veritasglobalai.com/' },
   { id: 'localsearch', name: 'Local Search', icon: <Search />, kind: 'File Search', state: 'Running', color: '#a78bfa', task: 'Local file search', usage: '—', port: 3101, group: 'Productivity', url: 'https://ailsearch.veritasglobalai.com/' },
   { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', url: 'https://files.veritasglobalai.com/' },
@@ -175,7 +175,7 @@ function App() {
   const [cpu, setCpu] = useState(37)
   const [ollamaLocal, setOllamaLocal] = useState({ available: false, models: [], active: [] })
   const [ollamaOpen, setOllamaOpen] = useState(false)
-  const [ollamaModel, setOllamaModel] = useState('')
+  const [ollamaModel, setOllamaModel] = useState(HOMELAB_OLLAMA_MODELS[0]?.name || '')
   const [ollamaPrompt, setOllamaPrompt] = useState('')
   const [ollamaReply, setOllamaReply] = useState('')
   const [ollamaError, setOllamaError] = useState('')
@@ -205,6 +205,7 @@ function App() {
   const [showAddCommand, setShowAddCommand] = useState(false)
   const [newCommand, setNewCommand] = useState({ label: '', url: '' })
   const [editingCommand, setEditingCommand] = useState(null)
+  const chatPanelRef = useRef(null)
 
   const [providers, setProviders] = usePersistentState('orbital_providers', [
     { id: 'ollama-local', name: 'Ollama (Local)', endpoint: 'http://localhost:11434', models: 'auto', status: 'Connected' },
@@ -241,7 +242,7 @@ function App() {
   useEffect(() => {
     let c = false; const chk = async () => {
       try { const [tR, pR] = await Promise.all([fetch('/ollama/api/tags'), fetch('/ollama/api/ps')]); if (!tR.ok || !pR.ok) throw new Error(); const [t, p] = await Promise.all([tR.json(), pR.json()]); if (!c) { const m = t.models || []; setOllamaLocal({ available: true, models: m, active: p.models || [] }); setOllamaModel(v => v || m.find(x => x.name === 'qwen2.5:0.5b')?.name || m[0]?.name || '') } }
-      catch { if (!c) setOllamaLocal({ available: false, models: [], active: [] }) }
+      catch { if (!c) { setOllamaLocal({ available: false, models: [], active: [] }); setOllamaModel(v => v || HOMELAB_OLLAMA_MODELS[0]?.name || '') } }
     }; chk(); const id = setInterval(chk, 10000); return () => { c = true; clearInterval(id) }
   }, [])
   useEffect(() => {
@@ -279,6 +280,13 @@ function App() {
     return () => window.removeEventListener('keydown', h)
   }, [])
 
+  useEffect(() => {
+    if (!chatOpen) return
+    const onDown = (e) => { if (chatPanelRef.current && !chatPanelRef.current.contains(e.target)) setChatOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [chatOpen])
+
   const localAgents = localAgentsBase.map(a => a.id === 'ollama-local' ? { ...a, state: ollamaLocal.available ? (ollamaLocal.active.length ? 'Working' : 'Running') : 'Unavailable', task: ollamaLocal.available ? (ollamaLocal.active.length ? `${ollamaLocal.active.length} model loaded` : `${ollamaLocal.models.length} models`) : 'API unavailable', usage: ollamaLocal.active.length ? 'Model loaded' : '—' } : a)
   const hlSvcs = homelabBase.map(s => homelabStatus[s.id] ? { ...s, state: homelabStatus[s.id] } : s)
   const vpsSvcs = vpsBase.map(s => ({ ...s, workspace: 'vps' }))
@@ -288,8 +296,19 @@ function App() {
   const filteredApps = filteredServices.filter(s => s.group !== 'AI' && s.group !== 'Agents')
   const ws = WORKSPACES.find(w => w.id === activeWorkspace)
 
+  const isExternal = (url) => {
+    if (!url) return false
+    if (url.startsWith('/')) return false
+    try { return !new URL(url, window.location.origin).hostname.endsWith('veritasglobalai.com') } catch { return true }
+  }
+
   const openService = (svc) => {
     if (!svc.url) return
+    if (isExternal(svc.url)) {
+      window.open(svc.url, '_blank')
+      setActivity(a => [[now(), 'System', `Opened ${svc.name} in a new tab`], ...a])
+      return
+    }
     setOpenApps(a => a.some(x => x.id === svc.id)
       ? a.map(x => x.id === svc.id ? { ...x, url: svc.url, name: svc.name, icon: svc.icon, emoji: svc.emoji, color: svc.color } : x)
       : [...a, { id: svc.id, name: svc.name, icon: svc.icon, emoji: svc.emoji, url: svc.url, color: svc.color }])
@@ -762,6 +781,7 @@ function App() {
                 <span style={{ color: activeApp.color, display: 'flex', alignItems: 'center', gap: '6px' }}>{iconOf(activeApp)} {activeApp.name}</span>
                 <span className="app-frame-url">{activeApp.url}</span>
                 <button onClick={() => { const f = document.getElementById(`frame-${activeApp.id}`); if (f) f.src = f.src }} title="Reload"><RefreshCw size={14} /></button>
+                <button onClick={() => window.open(activeApp.url, '_blank')} title="Open in new tab"><ExternalLink size={14} /></button>
               </div>
               <iframe id={`frame-${activeApp.id}`} src={activeApp.url} className="app-iframe" title={activeApp.name} />
             </div>
@@ -798,8 +818,8 @@ function App() {
       </div>
     </div>}
 
-    {chatOpen && <div className="chat-overlay" onClick={() => setChatOpen(false)}>
-      <div className="chat-panel" onClick={e => e.stopPropagation()}>
+    {chatOpen && <div className="chat-overlay">
+      <div className="chat-panel" ref={chatPanelRef}>
         <div className="chat-header">
           <span className="chat-title"><span className="logo"><Sparkles size={13} /></span> AI Assistant</span>
           <select value={ollamaModel} onChange={e => setOllamaModel(e.target.value)} className="chat-model">

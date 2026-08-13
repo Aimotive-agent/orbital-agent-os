@@ -239,8 +239,8 @@ header .subhead b{color:#e5e1e8}
 .palette-footer button:hover{background:#1f1d24}
 
 /* AI chat */
-.chat-overlay{position:fixed;inset:0;background:rgba(8,8,10,.62);backdrop-filter:blur(3px);z-index:110;display:flex;justify-content:flex-end}
-.chat-panel{width:100%;max-width:440px;height:100%;background:#141316;border-left:1px solid #2a272e;display:flex;flex-direction:column}
+.chat-overlay{position:fixed;inset:0;z-index:110;pointer-events:none}
+.chat-panel{pointer-events:auto;position:absolute;right:20px;bottom:20px;width:400px;max-width:calc(100vw - 40px);height:580px;max-height:calc(100vh - 40px);background:#141316;border:1px solid #2a272e;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden}
 .chat-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #2a272e}
 .chat-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.5px;color:#e5e1e8}
 .chat-title .logo{width:26px;height:26px}
