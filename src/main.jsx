@@ -32,46 +32,46 @@ const initialTasks = [
 ]
 
 const LOCAL_AGENTS = [
-  { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', iframe: null },
-  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', iframe: '/app/opencode/' },
-  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', iframe: '/app/hermes/' },
-  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', iframe: '/app/unsloth/' },
-  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', iframe: '/app/t3code/' },
-  { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', iframe: null },
-  { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', iframe: null },
-  { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', iframe: null },
+  { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', url: null },
+  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', url: 'http://192.168.1.33:36783/' },
+  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', url: 'http://192.168.1.33:9119/' },
+  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', url: 'http://192.168.1.33:8888/' },
+  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', url: 'http://192.168.1.33:3773/' },
+  { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', url: null },
+  { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', url: null },
+  { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', url: null },
 ]
 
 const HOMELAB_SERVICES = [
-  { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Running', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', iframe: null },
-  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 3004, group: 'AI', iframe: '/app/lmstudio/' },
-  { id: 'dify', name: 'Dify AI', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Running', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', iframe: null },
-  { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Running', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', iframe: null },
-  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', iframe: '/app/n8n/' },
-  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', iframe: '/app/jellyfin/web/' },
-  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', iframe: '/app/immich/' },
-  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', iframe: null },
-  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Running', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', iframe: '/app/paperless/' },
-  { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Running', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', iframe: null },
-  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Running', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', iframe: '/app/hivekeep/' },
-  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Running', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', iframe: '/app/karakeep/' },
-  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Running', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', iframe: '/app/homepage/' },
-  { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', iframe: '/app/weather/' },
-  { id: 'dify-web', name: 'Dify Web', icon: <Workflow />, kind: 'AI Platform UI', state: 'Running', color: '#60a5fa', task: 'Dify interface', usage: '—', port: 3003, group: 'AI', iframe: '/app/dify/' },
-  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', iframe: '/app/convex/' },
-  { id: 'workcover', name: 'Workcover', icon: <Search />, kind: 'Search Engine', state: 'Running', color: '#fb923c', task: 'Document search', usage: '—', port: 3100, group: 'Productivity', iframe: '/app/search/' },
-  { id: 'localsearch', name: 'Local Search', icon: <Search />, kind: 'File Search', state: 'Running', color: '#a78bfa', task: 'Local file search', usage: '—', port: 3101, group: 'Productivity', iframe: '/app/local/' },
-  { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', iframe: '/app/files/' },
-  { id: 'postgres-hl', name: 'PostgreSQL', icon: <Database />, kind: 'Database', state: 'Running', color: '#60a5fa', task: 'Primary DB', usage: '—', port: 5432, group: 'Infrastructure', iframe: null },
-  { id: 'redis-hl', name: 'Redis', icon: <Zap />, kind: 'Cache', state: 'Running', color: '#f87171', task: 'In-memory cache', usage: '—', port: 6379, group: 'Infrastructure', iframe: null },
-  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', iframe: '/app/openship/' },
+  { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Running', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', url: null },
+  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 3004, group: 'AI', url: 'http://192.168.1.42:3004/' },
+  { id: 'dify', name: 'Dify AI', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Running', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', url: null },
+  { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Running', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', url: null },
+  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', url: 'http://192.168.1.42:5678/' },
+  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', url: 'http://192.168.1.42:8096/web/' },
+  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', url: 'http://192.168.1.42:2283/' },
+  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', url: null },
+  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Running', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', url: 'http://192.168.1.42:8060/' },
+  { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Running', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', url: null },
+  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Running', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', url: 'http://192.168.1.42:8018/' },
+  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Running', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', url: 'http://192.168.1.42:3088/' },
+  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Running', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', url: 'http://192.168.1.42:3699/' },
+  { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', url: 'http://192.168.1.42:8070/' },
+  { id: 'dify-web', name: 'Dify Web', icon: <Workflow />, kind: 'AI Platform UI', state: 'Running', color: '#60a5fa', task: 'Dify interface', usage: '—', port: 3003, group: 'AI', url: 'http://192.168.1.42:3003/' },
+  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', url: 'http://192.168.1.42:6791/' },
+  { id: 'workcover', name: 'Workcover', icon: <Search />, kind: 'Search Engine', state: 'Running', color: '#fb923c', task: 'Document search', usage: '—', port: 3100, group: 'Productivity', url: 'http://192.168.1.42:3100/' },
+  { id: 'localsearch', name: 'Local Search', icon: <Search />, kind: 'File Search', state: 'Running', color: '#a78bfa', task: 'Local file search', usage: '—', port: 3101, group: 'Productivity', url: 'http://192.168.1.42:3101/' },
+  { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', url: 'http://192.168.1.42:3102/' },
+  { id: 'postgres-hl', name: 'PostgreSQL', icon: <Database />, kind: 'Database', state: 'Running', color: '#60a5fa', task: 'Primary DB', usage: '—', port: 5432, group: 'Infrastructure', url: null },
+  { id: 'redis-hl', name: 'Redis', icon: <Zap />, kind: 'Cache', state: 'Running', color: '#f87171', task: 'In-memory cache', usage: '—', port: 6379, group: 'Infrastructure', url: null },
+  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', url: 'http://192.168.1.42:3148/' },
 ]
 
 const VPS_SERVICES = [
-  { id: 'openwebui', name: 'Open WebUI', icon: <MessageSquare />, kind: 'AI Chat', state: 'Running', color: '#818cf8', task: 'Chat interface', usage: '—', port: 8080, group: 'AI', iframe: '/app/openwebui/' },
-  { id: 'langflow', name: 'Langflow', icon: <Workflow />, kind: 'AI Workflows', state: 'Running', color: '#f472b6', task: 'Flow builder', usage: '—', port: 7860, group: 'AI', iframe: '/app/langflow/' },
-  { id: 'kestra', name: 'Kestra', icon: <RefreshCw />, kind: 'Orchestration', state: 'Running', color: '#a78bfa', task: 'Workflow engine', usage: '—', port: 8085, group: 'Dev', iframe: '/app/kestra/' },
-  { id: 'vps-nodeapp', name: 'VPS Status', icon: <Monitor />, kind: 'Status Check', state: 'Running', color: '#34d399', task: 'VPS-HKG1 online', usage: '—', port: 3000, group: 'Monitoring', iframe: null },
+  { id: 'openwebui', name: 'Open WebUI', icon: <MessageSquare />, kind: 'AI Chat', state: 'Running', color: '#818cf8', task: 'Chat interface', usage: '—', port: 8080, group: 'AI', url: 'http://64.118.132.92:8080/' },
+  { id: 'langflow', name: 'Langflow', icon: <Workflow />, kind: 'AI Workflows', state: 'Running', color: '#f472b6', task: 'Flow builder', usage: '—', port: 7860, group: 'AI', url: 'http://64.118.132.92:7860/' },
+  { id: 'kestra', name: 'Kestra', icon: <RefreshCw />, kind: 'Orchestration', state: 'Running', color: '#a78bfa', task: 'Workflow engine', usage: '—', port: 8085, group: 'Dev', url: 'http://64.118.132.92:8085/' },
+  { id: 'vps-nodeapp', name: 'VPS Status', icon: <Monitor />, kind: 'Status Check', state: 'Running', color: '#34d399', task: 'VPS-HKG1 online', usage: '—', port: 3000, group: 'Monitoring', url: null },
 ]
 
 const HOMELAB_OLLAMA_MODELS = [
@@ -160,6 +160,9 @@ function App() {
   const [editingApp, setEditingApp] = useState(null)
   const [newApp, setNewApp] = useState({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' })
   const [localAppMode, setLocalAppMode] = useState(null)
+  const [localAgentsBase, setLocalAgentsBase] = useState(LOCAL_AGENTS)
+  const [homelabBase, setHomelabBase] = useState(HOMELAB_SERVICES)
+  const [vpsBase, setVpsBase] = useState(VPS_SERVICES)
 
   const now = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   const fetchTO = (url, ms = 5000) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), ms); return fetch(url, { signal: c.signal }).finally(() => clearTimeout(t)) }
@@ -188,9 +191,9 @@ function App() {
     }; chk(); const id = setInterval(chk, 15000); return () => { c = true; clearInterval(id) }
   }, [])
 
-  const localAgents = LOCAL_AGENTS.map(a => a.id === 'ollama-local' ? { ...a, state: ollamaLocal.available ? (ollamaLocal.active.length ? 'Working' : 'Running') : 'Unavailable', task: ollamaLocal.available ? (ollamaLocal.active.length ? `${ollamaLocal.active.length} model loaded` : `${ollamaLocal.models.length} models`) : 'API unavailable', usage: ollamaLocal.active.length ? 'Model loaded' : '—' } : a)
-  const hlSvcs = HOMELAB_SERVICES.map(s => homelabStatus[s.id] ? { ...s, state: homelabStatus[s.id] } : s)
-  const vpsSvcs = VPS_SERVICES.map(s => ({ ...s, workspace: 'vps' }))
+  const localAgents = localAgentsBase.map(a => a.id === 'ollama-local' ? { ...a, state: ollamaLocal.available ? (ollamaLocal.active.length ? 'Working' : 'Running') : 'Unavailable', task: ollamaLocal.available ? (ollamaLocal.active.length ? `${ollamaLocal.active.length} model loaded` : `${ollamaLocal.models.length} models`) : 'API unavailable', usage: ollamaLocal.active.length ? 'Model loaded' : '—' } : a)
+  const hlSvcs = homelabBase.map(s => homelabStatus[s.id] ? { ...s, state: homelabStatus[s.id] } : s)
+  const vpsSvcs = vpsBase.map(s => ({ ...s, workspace: 'vps' }))
   const allWorkspaceServices = { local: [...localAgents, ...customApps.filter(a => a.workspace?.includes('local'))], homelab: [...hlSvcs, ...customApps.filter(a => a.workspace?.includes('homelab'))], vps: [...vpsSvcs, ...customApps.filter(a => a.workspace?.includes('vps'))] }
   const filteredServices = allWorkspaceServices[activeWorkspace] || []
   const filteredAgents = filteredServices.filter(s => s.group === 'AI' || s.group === 'Agents')
@@ -198,11 +201,18 @@ function App() {
   const ws = WORKSPACES.find(w => w.id === activeWorkspace)
 
   const openService = (svc) => {
-    if (!svc.iframe) return
+    if (!svc.url) return
     const exists = openApps.find(a => a.id === svc.id)
     if (exists) { setActiveAppId(svc.id); return }
-    setOpenApps(a => [...a, { id: svc.id, name: svc.name, icon: svc.icon, iframe: svc.iframe, color: svc.color }])
+    setOpenApps(a => [...a, { id: svc.id, name: svc.name, icon: svc.icon, url: svc.url, color: svc.color }])
     setActiveAppId(svc.id)
+  }
+  const saveAppEdit = (app) => {
+    const id = app.id
+    if (localAgentsBase.some(a => a.id === id)) setLocalAgentsBase(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
+    else if (homelabBase.some(a => a.id === id)) setHomelabBase(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
+    else if (vpsBase.some(a => a.id === id)) setVpsBase(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
+    else setCustomApps(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
   }
   const handleLocalApp = (svc) => {
     if (svc.id === 'codex' || svc.id === 'ollama-local') {
@@ -264,19 +274,19 @@ function App() {
         <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace === 'homelab' ? 'HOMELAB' : activeWorkspace === 'vps' ? 'VPS' : 'RUNTIME'}</p><h2>{activeWorkspace === 'local' ? 'Apps & agents' : 'Services'}</h2></div><button className="text-button">View all <span>→</span></button></div>
         <div className="app-list">
           {filteredServices.map(svc => (
-            <button key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : activeWorkspace === 'local' ? handleLocalApp(svc) : null}>
+            <button key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : activeWorkspace === 'local' ? handleLocalApp(svc) : null}>
               <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind} · {svc.task}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
               <span className="usage">{svc.usage}</span>
-              {svc.iframe && <span className="launch-hint">Launch →</span>}
+              {svc.url && <span className="launch-hint">Launch →</span>}
               <MoreHorizontal size={17} />
             </button>
           ))}
         </div>
         <div className="selected-app">
           <div><span className="pulse" /><p><b>{filteredServices[0]?.name}</b> is {filteredServices[0]?.state?.toLowerCase()}</p><small>{filteredServices[0]?.task}</small></div>
-          <button onClick={() => { if (activeWorkspace === 'local' && !filteredServices[0]?.iframe) handleLocalApp(filteredServices[0]); else if (filteredServices[0]?.iframe) openService(filteredServices[0]) }} disabled={activeWorkspace === 'local' ? false : !filteredServices[0]?.iframe}><Play size={15} />{activeWorkspace === 'local' && filteredServices[0]?.id === 'codex' ? 'AI Chat' : activeWorkspace === 'local' ? filteredServices[0]?.id === 'ollama-local' ? 'AI Chat' : 'Open' : 'Open'}</button>
+          <button onClick={() => { if (activeWorkspace === 'local' && !filteredServices[0]?.url) handleLocalApp(filteredServices[0]); else if (filteredServices[0]?.url) openService(filteredServices[0]) }} disabled={activeWorkspace === 'local' ? false : !filteredServices[0]?.url}><Play size={15} />{activeWorkspace === 'local' && filteredServices[0]?.id === 'codex' ? 'AI Chat' : activeWorkspace === 'local' ? filteredServices[0]?.id === 'ollama-local' ? 'AI Chat' : 'Open' : 'Open'}</button>
         </div>
       </section>
 
@@ -347,13 +357,13 @@ function App() {
       <section className="panel apps-panel" style={{ gridColumn: '1 / -1' }}>
         <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>All Agents <span>{filteredAgents.length}</span></h2></div></div>
         <div className="app-list">{filteredAgents.map(svc => (
-          <div key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : null}>
+          <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : null}>
             <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
             <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
             <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
             <span className="usage">{svc.task}</span>
             {svc.port && <span className="port-tag">:{svc.port}</span>}
-            {svc.iframe && <span className="launch-hint">Launch →</span>}
+            {svc.url && <span className="launch-hint">Launch →</span>}
             <MoreHorizontal size={17} />
           </div>
         ))}</div>
@@ -371,13 +381,13 @@ function App() {
         return <section key={group} className="panel apps-panel" style={group === 'AI' ? { gridColumn: '1 / -1' } : {}}>
           <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>{group}</h2></div></div>
           <div className="app-list">{ga.map(svc => (
-            <div key={svc.id} className="app-row" onClick={() => svc.iframe ? openService(svc) : null}>
+            <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : null}>
               <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
               <span className="usage">{svc.task}</span>
               {svc.port && <span className="port-tag">:{svc.port}</span>}
-              {svc.iframe && <span className="launch-hint">Launch →</span>}
+              {svc.url && <span className="launch-hint">Launch →</span>}
               <MoreHorizontal size={17} />
             </div>
           ))}</div>
@@ -455,34 +465,31 @@ function App() {
       <section className="panel" style={{ gridColumn: '1 / -1' }}>
         <div className="panel-heading"><div><p className="eyebrow">APP MANAGEMENT</p><h2>Custom Apps & Services</h2></div><button onClick={() => { setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }) }} className="add-task"><Plus size={16} />Add</button></div>
         {showAddApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px' }}>
-          <input value={newApp.name} onChange={e => setNewApp({ ...newApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 100px' }} />
-          <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL or proxy path (e.g. /app/myapp/)" style={{ flex: '1 1 180px' }} />
-          <input value={newApp.kind} onChange={e => setNewApp({ ...newApp, kind: e.target.value })} placeholder="Kind (e.g. 'Media Server')" style={{ flex: '1 1 130px' }} />
-          <input value={newApp.port} onChange={e => setNewApp({ ...newApp, port: e.target.value })} placeholder="Port" style={{ flex: '0 0 60px' }} />
-          <input value={newApp.group} onChange={e => setNewApp({ ...newApp, group: e.target.value })} placeholder="Group" style={{ flex: '0 0 90px' }} />
+          <input value={newApp.name} onChange={e => setNewApp({ ...newApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 120px' }} />
+          <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL (e.g. http://192.168.1.42:8096/)" style={{ flex: '1 1 260px' }} />
+          <select value={(newApp.workspace || ['local'])[0]} onChange={e => setNewApp({ ...newApp, workspace: [e.target.value] })} style={{ background: '#26242a', color: '#e5e1e8', border: '1px solid #454049', borderRadius: '5px', padding: '6px 9px' }}>
+            <option value="local">This PC</option>
+            <option value="homelab">Homelab</option>
+            <option value="vps">VPS</option>
+          </select>
           <button type="button" onClick={() => setShowAddApp(false)}><X size={16} /></button>
-          <button type="submit" onClick={() => { if (newApp.name) { setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, kind: newApp.kind || 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: parseInt(newApp.port) || null, group: newApp.group || 'Custom', iframe: newApp.url || null, workspace: newApp.workspace }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
+          <button type="submit" onClick={() => { if (newApp.name) { const ws = newApp.workspace || ['local']; setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, kind: 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: null, group: 'Custom', url: newApp.url || null, workspace: ws }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'] }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
         </div>}
         {editingApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px', borderColor: '#5e5285' }}>
           <span style={{ fontSize: '11px', color: '#8978f3', width: '100%' }}>Editing: {editingApp.name}</span>
-          <input value={editingApp.name} onChange={e => setEditingApp({ ...editingApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 100px' }} />
-          <input value={editingApp.iframe || ''} onChange={e => setEditingApp({ ...editingApp, iframe: e.target.value || null })} placeholder="URL or proxy path" style={{ flex: '1 1 180px' }} />
-          <input value={editingApp.kind} onChange={e => setEditingApp({ ...editingApp, kind: e.target.value })} placeholder="Kind" style={{ flex: '1 1 130px' }} />
-          <input value={editingApp.port || ''} onChange={e => setEditingApp({ ...editingApp, port: parseInt(e.target.value) || null })} placeholder="Port" style={{ flex: '0 0 60px' }} />
-          <input value={editingApp.group} onChange={e => setEditingApp({ ...editingApp, group: e.target.value })} placeholder="Group" style={{ flex: '0 0 90px' }} />
+          <input value={editingApp.name} onChange={e => setEditingApp({ ...editingApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 120px' }} />
+          <input value={editingApp.url || ''} onChange={e => setEditingApp({ ...editingApp, url: e.target.value || null })} placeholder="URL" style={{ flex: '1 1 260px' }} />
           <button type="button" onClick={() => setEditingApp(null)}><X size={16} /></button>
-          <button type="submit" onClick={() => { setCustomApps(cs => cs.map(a => a.id === editingApp.id ? { ...editingApp, icon: <Box /> } : a)); setEditingApp(null); setActivity(a => [[now(), 'Settings', `Updated app: ${editingApp.name}`], ...a]) }} style={{ background: '#3d355c', color: '#e1daff', borderRadius: '6px', padding: '0 13px', fontSize: '11px' }}><Check size={14} /> Save</button>
+          <button type="submit" onClick={() => { saveAppEdit(editingApp); setEditingApp(null); setActivity(a => [[now(), 'Settings', `Updated app: ${editingApp.name}`], ...a]) }} style={{ background: '#3d355c', color: '#e1daff', borderRadius: '6px', padding: '0 13px', fontSize: '11px' }}><Check size={14} /> Save</button>
         </div>}
         <div className="app-list" style={{ maxHeight: '300px', overflow: 'auto' }}>
-          {[...LOCAL_AGENTS, ...HOMELAB_SERVICES, ...VPS_SERVICES, ...customApps].map(a => <div key={a.id} className="app-row">
+          {[...localAgentsBase, ...homelabBase, ...vpsBase, ...customApps].map(a => <div key={a.id} className="app-row">
             <span className="app-icon" style={{ color: a.color, background: `${a.color}17` }}>{a.icon}</span>
-            <span className="app-info"><b>{a.name}</b><small>{a.kind} · {a.group} · {a.port ? ':' + a.port : 'no port'} {a.iframe ? '→ ' + a.iframe : '· no link'}</small></span>
+            <span className="app-info"><b>{a.name}</b><small>{a.kind} · {a.group} · {a.port ? ':' + a.port : 'no port'} {a.url ? '→ ' + a.url : '· no link'}</small></span>
             <span className={`state ${a.state?.toLowerCase()}`}><i />{a.state}</span>
-            {a.iframe && <button onClick={() => openService(a)} className="run" title="Test launch"><Play size={14} /></button>}
-            {customApps.some(x => x.id === a.id) && <>
-              <button onClick={() => setEditingApp({ ...a })} style={{ background: 'transparent', border: 0, color: '#8978f3', padding: '4px', borderRadius: '4px' }} title="Edit"><Settings size={14} /></button>
-              <button onClick={() => setCustomApps(cs => cs.filter(x => x.id !== a.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>
-            </>}
+            {a.url && <button onClick={() => openService(a)} className="run" title="Test launch"><Play size={14} /></button>}
+            <button onClick={() => setEditingApp({ ...a })} style={{ background: 'transparent', border: 0, color: '#8978f3', padding: '4px', borderRadius: '4px' }} title="Edit"><Settings size={14} /></button>
+            {customApps.some(x => x.id === a.id) && <button onClick={() => setCustomApps(cs => cs.filter(x => x.id !== a.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>}
           </div>)}
         </div>
       </section>
@@ -544,14 +551,14 @@ function App() {
         renderDashboard()
       ) : (
         <div className="app-frame-wrapper">
-          {activeApp && activeApp.iframe ? (
+          {activeApp && activeApp.url ? (
             <div className="app-frame-container">
               <div className="app-frame-bar">
                 <span style={{ color: activeApp.color, display: 'flex', alignItems: 'center', gap: '6px' }}>{activeApp.icon} {activeApp.name}</span>
-                <span className="app-frame-url">{activeApp.iframe}</span>
+                <span className="app-frame-url">{activeApp.url}</span>
                 <button onClick={() => { const f = document.getElementById(`frame-${activeApp.id}`); if (f) f.src = f.src }} title="Reload"><RefreshCw size={14} /></button>
               </div>
-              <iframe id={`frame-${activeApp.id}`} src={activeApp.iframe} className="app-iframe" title={activeApp.name} />
+              <iframe id={`frame-${activeApp.id}`} src={activeApp.url} className="app-iframe" title={activeApp.name} />
             </div>
           ) : (
             <div className="panel" style={{ padding: '60px', textAlign: 'center' }}>
