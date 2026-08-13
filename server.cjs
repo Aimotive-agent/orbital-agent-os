@@ -165,17 +165,17 @@ app.use('/app/:name', function (req, res) {
 })
 
 app.use('/ollama/api', function (req, res) {
-  req.url = req.url.replace(/^\/ollama/, '') || '/'
+  req.url = '/api' + (req.url || '')
   plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
 })
 
 app.use('/hl-ollama/api', function (req, res) {
-  req.url = req.url.replace(/^\/hl-ollama/, '') || '/'
+  req.url = '/api' + (req.url || '')
   plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
 })
 
 app.use('/hl-lmstudio', function (req, res) {
-  req.url = req.url.replace(/^\/hl-lmstudio/, '') || '/'
+  req.url = req.url || '/'
   plainProxy.web(req, res, { target: 'http://192.168.1.42:1234', changeOrigin: true })
 })
 
