@@ -27,7 +27,6 @@ function validSession (token) {
   return true
 }
 
-app.use(express.json())
 const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: true, selfHandleResponse: true })
 const plainProxy = httpProxy.createProxyServer({ changeOrigin: true, ws: true })
 
@@ -179,7 +178,7 @@ app.use('/hl-lmstudio', function (req, res) {
   plainProxy.web(req, res, { target: 'http://192.168.1.42:1234', changeOrigin: true })
 })
 
-app.post('/api/login', function (req, res) {
+app.post('/api/login', express.json(), function (req, res) {
   const body = req.body || {}
   if (body.username === AUTH_USER && body.password === AUTH_PASS) {
     const token = makeToken()

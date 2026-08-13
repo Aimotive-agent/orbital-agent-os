@@ -175,7 +175,7 @@ function App() {
   const [cpu, setCpu] = useState(37)
   const [ollamaLocal, setOllamaLocal] = useState({ available: false, models: [], active: [] })
   const [ollamaOpen, setOllamaOpen] = useState(false)
-  const [ollamaModel, setOllamaModel] = useState('qwen3.5:4b')
+  const [ollamaModel, setOllamaModel] = useState('qwen2.5:7b')
   const [ollamaPrompt, setOllamaPrompt] = useState('')
   const [ollamaReply, setOllamaReply] = useState('')
   const [ollamaError, setOllamaError] = useState('')
@@ -462,7 +462,7 @@ function App() {
   const sendChat = async (e) => {
     e.preventDefault()
     const text = chatInput.trim()
-    const model = ollamaModel || 'qwen3.5:4b'
+    const model = ollamaModel || 'qwen2.5:7b'
     if (!text || !model || chatBusy) return
     setChatInput('')
     setChatBusy(true)
