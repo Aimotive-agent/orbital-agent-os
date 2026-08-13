@@ -30,6 +30,11 @@ const targets = {
   'ollama-hl': 'http://192.168.1.42:11434',
 }
 
+function buildPatchScript(base) {
+  const b = JSON.stringify(base)
+  return `(function(){var b=${b};function r(u){if(typeof u==='string'&&u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}})();`
+}
+
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
   proxyReq.removeHeader('accept-encoding')
   proxyReq.removeHeader('Accept-Encoding')
@@ -51,6 +56,8 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
   if (proxyRes.headers['content-security-policy']) {
     proxyRes.headers['content-security-policy'] = proxyRes.headers['content-security-policy']
       .replace(/frame-ancestors[^;]*;?/gi, '')
+      .replace(/script-src[^;]*;?/gi, '')
+      .replace(/default-src[^;]*;?/gi, '')
       .replace(/;\s*$/, '')
     if (!proxyRes.headers['content-security-policy'].trim()) delete proxyRes.headers['content-security-policy']
   }
@@ -76,6 +83,7 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
         if ($('base').length === 0) {
           $('head').prepend(`<base href="${base}">`)
         }
+        $('head').prepend(`<script>${buildPatchScript(base)}</script>`)
         $('[src^="/"]').each((i, el) => {
           const src = $(el).attr('src')
           if (src && !src.startsWith(base)) $(el).attr('src', base + src.replace(/^\//, ''))
