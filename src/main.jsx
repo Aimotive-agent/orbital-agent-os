@@ -33,10 +33,10 @@ const initialTasks = [
 
 const LOCAL_AGENTS = [
   { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', url: null },
-  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', url: '/app/opencode/' },
-  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', url: '/app/hermes/' },
-  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', url: '/app/unsloth/' },
-  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', url: '/app/t3code/' },
+  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', url: 'http://localhost:36783/' },
+  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', url: 'http://localhost:9119/' },
+  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', url: 'http://localhost:8888/' },
+  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', url: 'http://localhost:3773/' },
   { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', url: null },
   { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', url: null },
   { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', url: null },
@@ -47,30 +47,30 @@ const HOMELAB_SERVICES = [
   { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 1234, group: 'AI', url: null },
   { id: 'dify', name: 'Dify AI', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Running', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', url: null },
   { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Running', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', url: null },
-  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', url: '/app/n8n/' },
-  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', url: '/app/jellyfin/web/' },
-  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', url: '/app/immich/' },
-  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', url: '/app/nextcloud/' },
-  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Running', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', url: '/app/paperless/' },
+  { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', url: 'http://192.168.1.42:5678/' },
+  { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', url: 'http://192.168.1.42:8096/web/' },
+  { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', url: 'http://192.168.1.42:2283/' },
+  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', url: 'http://192.168.1.42:8866/' },
+  { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Running', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', url: 'http://192.168.1.42:8060/' },
   { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Running', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', url: null },
-  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Running', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', url: '/app/hivekeep/' },
-  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Running', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', url: '/app/karakeep/' },
-  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Running', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', url: '/app/homepage/' },
-  { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', url: '/app/weather/' },
-  { id: 'dify-web', name: 'Dify Web', icon: <Workflow />, kind: 'AI Platform UI', state: 'Running', color: '#60a5fa', task: 'Dify interface', usage: '—', port: 3003, group: 'AI', url: '/app/dify/' },
-  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', url: '/app/convex/' },
-  { id: 'workcover', name: 'Workcover', icon: <Search />, kind: 'Search Engine', state: 'Running', color: '#fb923c', task: 'Document search', usage: '—', port: 3100, group: 'Productivity', url: '/app/search/' },
-  { id: 'localsearch', name: 'Local Search', icon: <Search />, kind: 'File Search', state: 'Running', color: '#a78bfa', task: 'Local file search', usage: '—', port: 3101, group: 'Productivity', url: '/app/local/' },
-  { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', url: '/app/files/' },
+  { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Running', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', url: 'http://192.168.1.42:8018/' },
+  { id: 'karakeep', name: 'KaraKeep', icon: <BookOpen />, kind: 'Bookmarks', state: 'Running', color: '#fb7185', task: 'Link archive', usage: '—', port: 3088, group: 'Productivity', url: 'http://192.168.1.42:3088/' },
+  { id: 'homepage', name: 'Homepage', icon: <Home />, kind: 'Dashboard', state: 'Running', color: '#818cf8', task: 'Service overview', usage: '—', port: 3699, group: 'Monitoring', url: 'http://192.168.1.42:3699/' },
+  { id: 'weather', name: 'Weather', icon: <Cloud />, kind: 'Weather Dashboard', state: 'Running', color: '#38bdf8', task: 'Weather forecast', usage: '—', port: 8070, group: 'Monitoring', url: 'http://192.168.1.42:8070/' },
+  { id: 'dify-web', name: 'Dify Web', icon: <Workflow />, kind: 'AI Platform UI', state: 'Running', color: '#60a5fa', task: 'Dify interface', usage: '—', port: 3003, group: 'AI', url: 'http://192.168.1.42:3003/' },
+  { id: 'convex-dash', name: 'Convex', icon: <Database />, kind: 'Backend Dashboard', state: 'Running', color: '#f472b6', task: 'Convex dashboard', usage: '—', port: 6791, group: 'Dev', url: 'http://192.168.1.42:6791/' },
+  { id: 'workcover', name: 'Workcover', icon: <Search />, kind: 'Search Engine', state: 'Running', color: '#fb923c', task: 'Document search', usage: '—', port: 3100, group: 'Productivity', url: 'http://192.168.1.42:3100/' },
+  { id: 'localsearch', name: 'Local Search', icon: <Search />, kind: 'File Search', state: 'Running', color: '#a78bfa', task: 'Local file search', usage: '—', port: 3101, group: 'Productivity', url: 'http://192.168.1.42:3101/' },
+  { id: 'fileserver', name: 'File Server', icon: <FolderOpen />, kind: 'File Browser', state: 'Running', color: '#34d399', task: 'File management', usage: '—', port: 3102, group: 'Productivity', url: 'http://192.168.1.42:3102/' },
   { id: 'postgres-hl', name: 'PostgreSQL', icon: <Database />, kind: 'Database', state: 'Running', color: '#60a5fa', task: 'Primary DB', usage: '—', port: 5432, group: 'Infrastructure', url: null },
   { id: 'redis-hl', name: 'Redis', icon: <Zap />, kind: 'Cache', state: 'Running', color: '#f87171', task: 'In-memory cache', usage: '—', port: 6379, group: 'Infrastructure', url: null },
-  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', url: '/app/openship/' },
+  { id: 'openship', name: 'OpenShip', icon: <Server />, kind: 'Deploy', state: 'Running', color: '#e879f9', task: 'Orchestration', usage: '—', port: null, group: 'Infrastructure', url: 'http://192.168.1.42:3148/' },
 ]
 
 const VPS_SERVICES = [
-  { id: 'openwebui', name: 'Open WebUI', icon: <MessageSquare />, kind: 'AI Chat', state: 'Running', color: '#818cf8', task: 'Chat interface', usage: '—', port: 8080, group: 'AI', url: '/app/openwebui/' },
-  { id: 'langflow', name: 'Langflow', icon: <Workflow />, kind: 'AI Workflows', state: 'Running', color: '#f472b6', task: 'Flow builder', usage: '—', port: 7860, group: 'AI', url: '/app/langflow/' },
-  { id: 'kestra', name: 'Kestra', icon: <RefreshCw />, kind: 'Orchestration', state: 'Running', color: '#a78bfa', task: 'Workflow engine', usage: '—', port: 8085, group: 'Dev', url: '/app/kestra/' },
+  { id: 'openwebui', name: 'Open WebUI', icon: <MessageSquare />, kind: 'AI Chat', state: 'Running', color: '#818cf8', task: 'Chat interface', usage: '—', port: 8080, group: 'AI', url: 'http://64.118.132.92:8080/' },
+  { id: 'langflow', name: 'Langflow', icon: <Workflow />, kind: 'AI Workflows', state: 'Running', color: '#f472b6', task: 'Flow builder', usage: '—', port: 7860, group: 'AI', url: 'http://64.118.132.92:7860/' },
+  { id: 'kestra', name: 'Kestra', icon: <RefreshCw />, kind: 'Orchestration', state: 'Running', color: '#a78bfa', task: 'Workflow engine', usage: '—', port: 8085, group: 'Dev', url: 'http://64.118.132.92:8085/' },
   { id: 'vps-nodeapp', name: 'VPS Status', icon: <Monitor />, kind: 'Status Check', state: 'Running', color: '#34d399', task: 'VPS-HKG1 online', usage: '—', port: 3000, group: 'Monitoring', url: null },
 ]
 
@@ -202,9 +202,9 @@ function App() {
 
   const openService = (svc) => {
     if (!svc.url) return
-    const exists = openApps.find(a => a.id === svc.id)
-    if (exists) { setActiveAppId(svc.id); return }
-    setOpenApps(a => [...a, { id: svc.id, name: svc.name, icon: svc.icon, url: svc.url, color: svc.color }])
+    setOpenApps(a => a.some(x => x.id === svc.id)
+      ? a.map(x => x.id === svc.id ? { ...x, url: svc.url, name: svc.name, icon: svc.icon, color: svc.color } : x)
+      : [...a, { id: svc.id, name: svc.name, icon: svc.icon, url: svc.url, color: svc.color }])
     setActiveAppId(svc.id)
   }
   const saveAppEdit = (app) => {
@@ -335,11 +335,11 @@ function App() {
         </div>}
       </section>}
 
-      <section className="panel health-panel">
+      {activeWorkspace === 'local' && <section className="panel health-panel">
         <div className="panel-heading"><div><p className="eyebrow">THIS MACHINE</p><h2>Resource health</h2></div><button className="dots"><MoreHorizontal /></button></div>
         <div className="rings"><Ring value={cpu} color="#a595ff" label="Processor" detail="8-core · 3.42 GHz" /><Ring value={40} color="#64d3aa" label="Memory" detail="6.4 of 16 GB" /><Ring value={62} color="#ffb56b" label="Storage" detail="310 of 500 GB" /></div>
         <div className="uptime"><span><Gauge size={17} />UPTIME</span><b>3 days, 14 hours</b><small>Last health check: just now</small></div>
-      </section>
+      </section>}
 
       <section className="panel tasks-panel">
         <div className="panel-heading"><div><p className="eyebrow">ORCHESTRATION</p><h2>Task queue <span>{tasks.length}</span></h2></div><button onClick={() => setShowComposer(true)} className="add-task"><Plus size={16} />New task</button></div>
