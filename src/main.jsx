@@ -151,11 +151,25 @@ function EmojiPicker({ value, onPick }) {
   </div>
 }
 
+function usePersistentState(key, initial) {
+  const [state, setState] = useState(() => {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw != null) return JSON.parse(raw)
+    } catch {}
+    return initial
+  })
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(state)) } catch {}
+  }, [key, state])
+  return [state, setState]
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [activeWorkspace, setActiveWorkspace] = useState('local')
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [tasks, setTasks] = useState(initialTasks)
+  const [tasks, setTasks] = usePersistentState('orbital_tasks', initialTasks)
   const [newTask, setNewTask] = useState('')
   const [showComposer, setShowComposer] = useState(false)
   const [cpu, setCpu] = useState(37)
@@ -166,7 +180,7 @@ function App() {
   const [ollamaReply, setOllamaReply] = useState('')
   const [ollamaError, setOllamaError] = useState('')
   const [ollamaBusy, setOllamaBusy] = useState(false)
-  const [activity, setActivity] = useState([
+  const [activity, setActivity] = usePersistentState('orbital_activity', [
     ['09:42', 'Codex', 'Started implementation: Agent OS interface'],
     ['09:38', 'Terminal', 'Started development server on port 5173'],
     ['09:30', 'System', 'Background health check completed'],
@@ -182,16 +196,16 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [paletteQuery, setPaletteQuery] = useState('')
 
-  const [providers, setProviders] = useState([
+  const [providers, setProviders] = usePersistentState('orbital_providers', [
     { id: 'ollama-local', name: 'Ollama (Local)', endpoint: 'http://localhost:11434', models: 'auto', status: 'Connected' },
     { id: 'ollama-hl', name: 'Ollama (Homelab)', endpoint: 'http://192.168.1.42:11434', models: 'auto', status: 'Connected' },
     { id: 'openwebui', name: 'Open WebUI API', endpoint: 'http://64.118.132.92:8080', models: 'auto', status: 'Connected' },
   ])
-  const [apiKeys, setApiKeys] = useState([
+  const [apiKeys, setApiKeys] = usePersistentState('orbital_api_keys', [
     { id: 1, name: 'OpenAI API Key', key: '••••••••sk-abc', provider: 'OpenAI' },
     { id: 2, name: 'Anthropic API Key', key: '••••••••ant-xyz', provider: 'Anthropic' },
   ])
-  const [mcpServers, setMcpServers] = useState([
+  const [mcpServers, setMcpServers] = usePersistentState('orbital_mcp', [
     { id: 1, name: 'Zapier MCP', endpoint: 'https://mcp.zapier.com/api/v1/connect', type: 'remote', status: 'Connected' },
   ])
   const [showAddProvider, setShowAddProvider] = useState(false)
@@ -200,14 +214,15 @@ function App() {
   const [newProvider, setNewProvider] = useState({ name: '', endpoint: '' })
   const [newApiKey, setNewApiKey] = useState({ name: '', key: '', provider: '' })
   const [newMcp, setNewMcp] = useState({ name: '', endpoint: '', type: 'remote' })
-  const [customApps, setCustomApps] = useState([])
+  const [customApps, setCustomApps] = usePersistentState('orbital_custom_apps', [])
   const [showAddApp, setShowAddApp] = useState(false)
   const [editingApp, setEditingApp] = useState(null)
   const [newApp, setNewApp] = useState({ name: '', url: '', workspace: ['local'], icon: '', emoji: '', kind: '', group: '', port: '' })
   const [localAppMode, setLocalAppMode] = useState(null)
-  const [localAgentsBase, setLocalAgentsBase] = useState(LOCAL_AGENTS)
-  const [homelabBase, setHomelabBase] = useState(HOMELAB_SERVICES)
-  const [vpsBase, setVpsBase] = useState(VPS_SERVICES)
+  const [appEdits, setAppEdits] = usePersistentState('orbital_app_edits', {})
+  const localAgentsBase = LOCAL_AGENTS.map(a => appEdits[a.id] ? { ...a, ...appEdits[a.id] } : a)
+  const homelabBase = HOMELAB_SERVICES.map(s => appEdits[s.id] ? { ...s, ...appEdits[s.id] } : s)
+  const vpsBase = VPS_SERVICES.map(s => appEdits[s.id] ? { ...s, ...appEdits[s.id] } : s)
 
   const now = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   const fetchTO = (url, ms = 5000) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), ms); return fetch(url, { signal: c.signal }).finally(() => clearTimeout(t)) }
@@ -266,16 +281,18 @@ function App() {
   const openService = (svc) => {
     if (!svc.url) return
     setOpenApps(a => a.some(x => x.id === svc.id)
-      ? a.map(x => x.id === svc.id ? { ...x, url: svc.url, name: svc.name, icon: svc.icon, color: svc.color } : x)
-      : [...a, { id: svc.id, name: svc.name, icon: svc.icon, url: svc.url, color: svc.color }])
+      ? a.map(x => x.id === svc.id ? { ...x, url: svc.url, name: svc.name, icon: svc.icon, emoji: svc.emoji, color: svc.color } : x)
+      : [...a, { id: svc.id, name: svc.name, icon: svc.icon, emoji: svc.emoji, url: svc.url, color: svc.color }])
     setActiveAppId(svc.id)
   }
   const saveAppEdit = (app) => {
     const id = app.id
-    if (localAgentsBase.some(a => a.id === id)) setLocalAgentsBase(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
-    else if (homelabBase.some(a => a.id === id)) setHomelabBase(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
-    else if (vpsBase.some(a => a.id === id)) setVpsBase(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
-    else setCustomApps(arr => arr.map(a => a.id === id ? { ...a, ...app } : a))
+    const patch = { name: app.name, url: app.url ?? null, emoji: app.emoji ?? '' }
+    if (customApps.some(a => a.id === id)) {
+      setCustomApps(arr => arr.map(a => a.id === id ? { ...a, ...patch } : a))
+    } else {
+      setAppEdits(e => ({ ...e, [id]: { ...(e[id] || {}), ...patch } }))
+    }
   }
   const handleLocalApp = (svc) => {
     if (svc.id === 'codex' || svc.id === 'ollama-local') {
@@ -296,7 +313,7 @@ function App() {
     if (activeAppId === id) setActiveAppId(openApps.length > 1 ? openApps.find(a => a.id !== id)?.id || null : null)
   }
 
-  const iconOf = (s) => s.emoji ? <span className="app-emoji">{s.emoji}</span> : s.icon
+  const iconOf = (s) => s.emoji ? <span className="app-emoji">{s.emoji}</span> : (s.icon || <Box />)
 
   const doLogout = () => {
     if (token) fetch('/api/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(() => {})
@@ -581,7 +598,7 @@ function App() {
               <option value="vps">VPS</option>
             </select>
             <button type="button" onClick={() => setShowAddApp(false)}><X size={16} /></button>
-            <button type="submit" onClick={() => { if (newApp.name) { const ws = newApp.workspace || ['local']; setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, emoji: newApp.emoji || '📦', kind: 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: null, group: 'Custom', url: newApp.url || null, workspace: ws }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'], emoji: '' }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
+            <button type="submit" onClick={() => { if (newApp.name) { const ws = newApp.workspace || ['local']; setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, emoji: newApp.emoji || '📦', kind: 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: null, group: 'Custom', url: newApp.url || null, workspace: ws }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'], emoji: '' }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
           </div>
           <div style={{ width: '100%' }}>
             <span style={{ fontSize: '11px', color: '#8978f3', display: 'block', marginBottom: '6px' }}>Choose an icon</span>
