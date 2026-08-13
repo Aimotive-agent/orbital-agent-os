@@ -2,8 +2,32 @@ const express = require('express')
 const httpProxy = require('http-proxy')
 const cheerio = require('cheerio')
 const path = require('path')
+const crypto = require('crypto')
 
 const app = express()
+
+const AUTH_USER = process.env.AUTH_USER || 'Homelab'
+const AUTH_PASS = process.env.AUTH_PASS || 'Zasada3434'
+const AUTH_TTL = 24 * 60 * 60 * 1000
+const sessions = new Map()
+
+function makeToken () {
+  return crypto.randomBytes(32).toString('hex')
+}
+function getToken (req) {
+  const h = req.headers.authorization || ''
+  return h.replace(/^Bearer\s+/i, '') || null
+}
+function validSession (token) {
+  if (!token || !sessions.has(token)) return false
+  if (Date.now() - sessions.get(token) > AUTH_TTL) {
+    sessions.delete(token)
+    return false
+  }
+  return true
+}
+
+app.use(express.json())
 const proxy = httpProxy.createProxyServer({ changeOrigin: true, ws: true, selfHandleResponse: true })
 const plainProxy = httpProxy.createProxyServer({ changeOrigin: true, ws: true })
 
@@ -146,6 +170,32 @@ app.use('/ollama/api', function (req, res) {
 
 app.use('/hl-ollama/api', function (req, res) {
   plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
+})
+
+app.post('/api/login', function (req, res) {
+  const body = req.body || {}
+  if (body.username === AUTH_USER && body.password === AUTH_PASS) {
+    const token = makeToken()
+    sessions.set(token, Date.now())
+    res.json({ token, username: AUTH_USER })
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' })
+  }
+})
+
+app.post('/api/logout', function (req, res) {
+  const token = getToken(req)
+  if (token) sessions.delete(token)
+  res.json({ ok: true })
+})
+
+app.get('/api/me', function (req, res) {
+  const token = getToken(req)
+  if (validSession(token)) {
+    res.json({ username: AUTH_USER })
+  } else {
+    res.status(401).json({ error: 'Unauthorized' })
+  }
 })
 
 app.use(express.static(path.join(__dirname, 'dist')))

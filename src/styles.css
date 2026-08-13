@@ -193,3 +193,44 @@ header .subhead b{color:#e5e1e8}
 .sidebar .nav:hover .close-app-btn,.sidebar .nav.active .close-app-btn{visibility:visible}
 
 @media(max-width:768px){.sidebar{display:none}main{margin-left:0;padding:6px 16px 60px}header{flex-direction:column}.status-strip{gap:6px}.header-actions{flex-wrap:wrap}}
+
+/* Login screen */
+.login-screen{min-height:100vh;display:grid;place-items:center;background:radial-gradient(ellipse 90% 65% at 68% -15%,#24212d 0%,transparent 52%),#111112;padding:24px}
+.login-card{width:100%;max-width:360px;background:#141316;border:1px solid #2a272e;border-radius:14px;padding:34px}
+.login-brand{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:1.9px;margin-bottom:28px}
+.login-card h1{font-size:24px;margin:0 0 6px;letter-spacing:-.4px}
+.login-sub{color:#8d8895;font-size:13px;margin:0 0 24px}
+.login-card form{display:grid;gap:12px}
+.login-card input{background:#19171d;border:1px solid #3d3850;border-radius:8px;padding:12px 14px;color:#eee;font-size:14px;outline:none;width:100%}
+.login-card input:focus{border-color:#8170ce}
+.login-card button[type=submit]{background:linear-gradient(135deg,#c5b8ff,#8978f3);color:#201d2c;border:0;border-radius:8px;padding:12px;font-size:14px;font-weight:700;width:100%}
+.login-card button[type=submit]:disabled{opacity:.6;cursor:default}
+.login-error{background:#2a1b1e;border:1px solid #663f43;color:#f2a5a8;font-size:12px;padding:10px 12px;border-radius:7px}
+
+/* Emoji picker */
+.emoji-picker{display:flex;flex-wrap:wrap;gap:4px;background:#131315;border:1px solid #2a272e;border-radius:8px;padding:10px;max-height:150px;overflow-y:auto}
+.emoji-opt{background:none;border:1px solid transparent;border-radius:7px;width:34px;height:34px;display:grid;place-items:center;font-size:19px;padding:0}
+.emoji-opt:hover{background:#1c1a20}
+.emoji-opt.active{border-color:#8170ce;background:#1f1c2c}
+
+/* Emoji shown inside app icons */
+.app-emoji{font-size:19px;line-height:1}
+
+/* Command palette */
+.palette-overlay{position:fixed;inset:0;background:rgba(8,8,10,.62);backdrop-filter:blur(3px);z-index:100;display:flex;justify-content:center;align-items:flex-start;padding:90px 20px 20px}
+.palette{width:100%;max-width:600px;background:#16151a;border:1px solid #38353c;border-radius:13px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.palette-input{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #2a272e}
+.palette-input svg{color:#6f6a75;flex-shrink:0}
+.palette-input input{flex:1;background:none;border:0;outline:none;color:#eee;font-size:15px}
+.palette-input input::placeholder{color:#6f6a75}
+.palette-input kbd{background:#2d2a31;padding:2px 7px;border-radius:4px;font-family:'DM Mono';font-size:10px;color:#8b8792}
+.palette-results{max-height:420px;overflow-y:auto;padding:7px}
+.palette-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:9px 11px}
+.palette-item:hover{background:#1f1d24}
+.palette-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:7px;background:#242229;color:#a595ff;flex-shrink:0}
+.palette-icon svg{width:16px;height:16px}
+.palette-icon .app-emoji{font-size:17px}
+.palette-ws{width:20px;height:20px;display:grid;place-items:center;border-radius:5px;font-size:11px;font-weight:700;color:#8de2ef}
+.palette-label{flex:1;font-size:13px;color:#e5e1e8}
+.palette-hint{font-size:10px;color:#6f6a75;text-transform:uppercase;letter-spacing:.5px}
+.palette-empty{padding:24px;text-align:center;color:#8b8792;font-size:13px}

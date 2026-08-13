@@ -6,7 +6,8 @@ import {
   MoreHorizontal, PanelLeftClose, Play, Plus, Search, Settings,
   Sparkles, Terminal, Wifi, X, Server, Globe, Zap, Database,
   Film, Camera, FileText, BookOpen, Workflow, Brain, Cloud,
-  FolderOpen, RefreshCw, ArrowRight, Home, Monitor, Key, Link, Trash2, Check, ClipboardCopy
+  FolderOpen, RefreshCw, ArrowRight, Home, Monitor, Key, Link, Trash2, Check, ClipboardCopy,
+  Lock, LogOut
 } from 'lucide-react'
 import './styles.css'
 
@@ -23,6 +24,8 @@ const WORKSPACES = [
   { id: 'homelab', name: 'Homelab', icon: 'H', color: '#274451', type: 'homelab', host: '192.168.1.42', desc: 'Unraid · 15+ services' },
   { id: 'vps', name: 'VPS', icon: 'V', color: '#4a3f2e', type: 'vps', host: '64.118.132.92', desc: 'Debian · 4 services' },
 ]
+
+const EMOJIS = ['📦', '🤖', '🧠', '🖥️', '💻', '🗄️', '🌐', '☁️', '🔒', '🔑', '🛡️', '⚡', '🔥', '🚀', '📡', '📊', '📈', '📁', '📂', '🗂️', '📄', '📝', '📚', '📖', '🔍', '⚙️', '🔧', '🔨', '🧩', '💾', '🎬', '🎵', '📷', '🖼️', '🎨', '🎮', '🕹️', '🎞️', '🍿', '📱', '💬', '🗣️', '🎧', '🏠', '🗺️', '📅', '⏰', '🌤️', '🌙', '🧪', '🐳', '🦊', '🦉', '🐙', '🦑', '🐢', '📋', '✅', '⚠️', '🛰️', '🪄', '🧭', '🔗']
 
 const initialTasks = [
   { id: 1, title: 'Build agent status protocol', owner: 'Codex', status: 'In progress', time: 'now' },
@@ -108,6 +111,46 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const submit = async (e) => {
+    e.preventDefault()
+    if (busy) return
+    setBusy(true)
+    setError('')
+    try {
+      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) })
+      const d = await r.json()
+      if (!r.ok) { setError(d.error || 'Invalid credentials'); return }
+      onLogin(d.token)
+    } catch {
+      setError('Connection failed — is the server running?')
+    } finally { setBusy(false) }
+  }
+  return <div className="login-screen">
+    <div className="login-card">
+      <div className="login-brand"><div className="logo"><Sparkles size={17} /></div><span>ORBITAL</span></div>
+      <h1>Sign in</h1>
+      <p className="login-sub">Access your Agent OS dashboard</p>
+      <form onSubmit={submit}>
+        <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" autoFocus autoComplete="username" />
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" />
+        {error && <div className="login-error">{error}</div>}
+        <button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+      </form>
+    </div>
+  </div>
+}
+
+function EmojiPicker({ value, onPick }) {
+  return <div className="emoji-picker">
+    {EMOJIS.map(e => <button type="button" key={e} className={`emoji-opt ${value === e ? 'active' : ''}`} onClick={() => onPick(e)}>{e}</button>)}
+  </div>
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [activeWorkspace, setActiveWorkspace] = useState('local')
@@ -134,6 +177,10 @@ function App() {
   const [hlOllamaActive, setHlOllamaActive] = useState([])
   const [openApps, setOpenApps] = useState([])
   const [activeAppId, setActiveAppId] = useState(null)
+  const [token, setToken] = useState(() => localStorage.getItem('orbital_token') || null)
+  const [authState, setAuthState] = useState(localStorage.getItem('orbital_token') ? 'checking' : 'loggedout')
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [paletteQuery, setPaletteQuery] = useState('')
 
   const [providers, setProviders] = useState([
     { id: 'ollama-local', name: 'Ollama (Local)', endpoint: 'http://localhost:11434', models: 'auto', status: 'Connected' },
@@ -156,7 +203,7 @@ function App() {
   const [customApps, setCustomApps] = useState([])
   const [showAddApp, setShowAddApp] = useState(false)
   const [editingApp, setEditingApp] = useState(null)
-  const [newApp, setNewApp] = useState({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' })
+  const [newApp, setNewApp] = useState({ name: '', url: '', workspace: ['local'], icon: '', emoji: '', kind: '', group: '', port: '' })
   const [localAppMode, setLocalAppMode] = useState(null)
   const [localAgentsBase, setLocalAgentsBase] = useState(LOCAL_AGENTS)
   const [homelabBase, setHomelabBase] = useState(HOMELAB_SERVICES)
@@ -187,6 +234,24 @@ function App() {
         if (o.status === 'fulfilled' && o.value.ok) { const d = await o.value.json(); setHlOllamaModels(d.models || []); try { const pR = await fetchTO('/hl-ollama/api/ps'); if (pR.ok) setHlOllamaActive((await pR.json()).models || []) } catch {} }
       } catch {}
     }; chk(); const id = setInterval(chk, 15000); return () => { c = true; clearInterval(id) }
+  }, [])
+
+  useEffect(() => {
+    if (!token) { setAuthState('loggedout'); return }
+    let c = false
+    fetch('/api/me', { headers: { Authorization: 'Bearer ' + token } })
+      .then(r => { if (c) return; if (r.ok) setAuthState('loggedin'); else { localStorage.removeItem('orbital_token'); setAuthState('loggedout') } })
+      .catch(() => { if (!c) { localStorage.removeItem('orbital_token'); setAuthState('loggedout') } })
+    return () => { c = true }
+  }, [token])
+
+  useEffect(() => {
+    const h = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(o => !o) }
+      else if (e.key === 'Escape') { setPaletteOpen(false) }
+    }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
   }, [])
 
   const localAgents = localAgentsBase.map(a => a.id === 'ollama-local' ? { ...a, state: ollamaLocal.available ? (ollamaLocal.active.length ? 'Working' : 'Running') : 'Unavailable', task: ollamaLocal.available ? (ollamaLocal.active.length ? `${ollamaLocal.active.length} model loaded` : `${ollamaLocal.models.length} models`) : 'API unavailable', usage: ollamaLocal.active.length ? 'Model loaded' : '—' } : a)
@@ -231,6 +296,50 @@ function App() {
     if (activeAppId === id) setActiveAppId(openApps.length > 1 ? openApps.find(a => a.id !== id)?.id || null : null)
   }
 
+  const iconOf = (s) => s.emoji ? <span className="app-emoji">{s.emoji}</span> : s.icon
+
+  const doLogout = () => {
+    if (token) fetch('/api/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }).catch(() => {})
+    localStorage.removeItem('orbital_token')
+    setToken(null)
+    setAuthState('loggedout')
+    setOpenApps([])
+    setActiveAppId(null)
+  }
+
+  const allServices = [...localAgentsBase, ...homelabBase, ...vpsBase, ...customApps]
+
+  const q = paletteQuery.trim().toLowerCase()
+  const paletteItems = []
+  TABS.forEach(t => { if (!q || t.label.toLowerCase().includes(q) || t.id.includes(q)) paletteItems.push({ type: 'tab', id: t.id, label: 'Go to ' + t.label, icon: t.icon, hint: 'View' }) })
+  WORKSPACES.forEach(w => { if (!q || w.name.toLowerCase().includes(q) || w.id.includes(q)) paletteItems.push({ type: 'workspace', id: w.id, label: 'Switch to ' + w.name, icon: <span style={{ background: w.color }} className="palette-ws">{w.icon}</span>, hint: 'Workspace' }) })
+  allServices.forEach(s => {
+    if (!q || s.name.toLowerCase().includes(q) || (s.kind || '').toLowerCase().includes(q)) {
+      paletteItems.push({ type: 'app', id: s.id, label: s.name, icon: iconOf(s), hint: s.kind + (s.url ? '' : ' · no UI'), color: s.color, svc: s })
+    }
+  })
+  const paletteCommands = [
+    { type: 'command', id: 'new-task', label: 'New task', icon: <Plus />, hint: 'Command', run: () => setShowComposer(true) },
+    { type: 'command', id: 'add-app', label: 'Add custom app', icon: <Box />, hint: 'Command', run: () => { setActiveTab('settings'); setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], emoji: '', kind: '', group: '', port: '' }) } },
+    { type: 'command', id: 'settings', label: 'Open settings', icon: <Settings />, hint: 'Command', run: () => { setActiveTab('settings'); setActiveAppId(null) } },
+    { type: 'command', id: 'toggle-sidebar', label: 'Toggle sidebar', icon: <PanelLeftClose />, hint: 'Command', run: () => setSidebarOpen(o => !o) },
+    { type: 'command', id: 'logout', label: 'Sign out', icon: <LogOut />, hint: 'Command', run: doLogout },
+  ]
+  paletteCommands.forEach(c => { if (!q || c.label.toLowerCase().includes(q)) paletteItems.push(c) })
+
+  const runPaletteItem = (item) => {
+    setPaletteOpen(false)
+    setPaletteQuery('')
+    if (item.type === 'tab') { setActiveTab(item.id); setActiveAppId(null) }
+    else if (item.type === 'workspace') { setActiveWorkspace(item.id); setActiveAppId(null) }
+    else if (item.type === 'app') {
+      if (item.svc?.url) { openService(item.svc) }
+      else if (item.svc && activeWorkspace === 'local') { handleLocalApp(item.svc) }
+      else if (item.svc) { setActiveWorkspace(item.svc.workspace?.[0] || 'local') }
+    }
+    else if (item.type === 'command' && item.run) item.run()
+  }
+
   const addTask = e => { e.preventDefault(); if (!newTask.trim()) return; setTasks(t => [{ id: Date.now(), title: newTask.trim(), owner: 'You', status: 'Queued', time: 'just now' }, ...t]); setActivity(a => [[now(), 'You', `Created task: ${newTask.trim()}`], ...a]); setNewTask(''); setShowComposer(false) }
   const runTask = t => { setTasks(ts => ts.map(x => x.id === t.id ? { ...x, status: 'In progress', owner: 'Codex' } : x)); setActivity(a => [[now(), 'Codex', `Accepted task: ${t.title}`], ...a]) }
   const askOllama = async e => { e.preventDefault(); if (!ollamaPrompt.trim() || !ollamaModel || ollamaBusy) return; setOllamaBusy(true); setOllamaError(''); setOllamaReply(''); const apiBase = ollamaLocal.available ? '/ollama' : '/app/ollama-hl'; try { const r = await fetch(apiBase + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: ollamaPrompt.trim(), stream: false }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error || d.message || 'Request failed'); setOllamaReply(d.response || 'No response from model.'); setActivity(a => [[now(), 'Ollama', `Prompted ${ollamaModel}`], ...a]) } catch (er) { setOllamaError(er.message || 'Connection failed — is Ollama running on the homelab?') } finally { setOllamaBusy(false) } }
@@ -253,9 +362,9 @@ function App() {
         </p>
       </div>
       <div className="header-actions">
-        <button className="search"><Search size={17} />Search anything <kbd>Ctrl K</kbd></button>
+        <button className="search" onClick={() => setPaletteOpen(true)}><Search size={17} />Search anything <kbd>Ctrl K</kbd></button>
         <button className="icon-button"><MessageSquare size={18} /><i /></button>
-        <button className="command"><Command size={17} />Command palette</button>
+        <button className="command" onClick={() => setPaletteOpen(true)}><Command size={17} />Command palette</button>
       </div>
     </header>
     <section className="status-strip">
@@ -273,7 +382,7 @@ function App() {
         <div className="app-list">
           {filteredServices.map(svc => (
             <button key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : activeWorkspace === 'local' ? handleLocalApp(svc) : null}>
-              <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
+              <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{iconOf(svc)}</span>
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind} · {svc.task}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
               <span className="usage">{svc.usage}</span>
@@ -356,7 +465,7 @@ function App() {
         <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>All Agents <span>{filteredAgents.length}</span></h2></div></div>
         <div className="app-list">{filteredAgents.map(svc => (
           <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : null}>
-            <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
+            <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{iconOf(svc)}</span>
             <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
             <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
             <span className="usage">{svc.task}</span>
@@ -380,7 +489,7 @@ function App() {
           <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>{group}</h2></div></div>
           <div className="app-list">{ga.map(svc => (
             <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : null}>
-              <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{svc.icon}</span>
+              <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{iconOf(svc)}</span>
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
               <span className="usage">{svc.task}</span>
@@ -461,28 +570,40 @@ function App() {
         </div>
       </section>
       <section className="panel" style={{ gridColumn: '1 / -1' }}>
-        <div className="panel-heading"><div><p className="eyebrow">APP MANAGEMENT</p><h2>Custom Apps & Services</h2></div><button onClick={() => { setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }) }} className="add-task"><Plus size={16} />Add</button></div>
-        {showAddApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px' }}>
-          <input value={newApp.name} onChange={e => setNewApp({ ...newApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 120px' }} />
-          <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL (e.g. http://192.168.1.42:8096/)" style={{ flex: '1 1 260px' }} />
-          <select value={(newApp.workspace || ['local'])[0]} onChange={e => setNewApp({ ...newApp, workspace: [e.target.value] })} style={{ background: '#26242a', color: '#e5e1e8', border: '1px solid #454049', borderRadius: '5px', padding: '6px 9px' }}>
-            <option value="local">This PC</option>
-            <option value="homelab">Homelab</option>
-            <option value="vps">VPS</option>
-          </select>
-          <button type="button" onClick={() => setShowAddApp(false)}><X size={16} /></button>
-          <button type="submit" onClick={() => { if (newApp.name) { const ws = newApp.workspace || ['local']; setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, kind: 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: null, group: 'Custom', url: newApp.url || null, workspace: ws }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'] }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
+        <div className="panel-heading"><div><p className="eyebrow">APP MANAGEMENT</p><h2>Custom Apps & Services</h2></div><button onClick={() => { setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', emoji: '', kind: '', group: '', port: '' }) }} className="add-task"><Plus size={16} />Add</button></div>
+        {showAddApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px', alignItems: 'flex-start' }}>
+          <div style={{ width: '100%', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <input value={newApp.name} onChange={e => setNewApp({ ...newApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 120px' }} />
+            <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL (e.g. http://192.168.1.42:8096/)" style={{ flex: '1 1 260px' }} />
+            <select value={(newApp.workspace || ['local'])[0]} onChange={e => setNewApp({ ...newApp, workspace: [e.target.value] })} style={{ background: '#26242a', color: '#e5e1e8', border: '1px solid #454049', borderRadius: '5px', padding: '6px 9px' }}>
+              <option value="local">This PC</option>
+              <option value="homelab">Homelab</option>
+              <option value="vps">VPS</option>
+            </select>
+            <button type="button" onClick={() => setShowAddApp(false)}><X size={16} /></button>
+            <button type="submit" onClick={() => { if (newApp.name) { const ws = newApp.workspace || ['local']; setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, emoji: newApp.emoji || '📦', kind: 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: null, group: 'Custom', url: newApp.url || null, workspace: ws }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'], emoji: '' }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
+          </div>
+          <div style={{ width: '100%' }}>
+            <span style={{ fontSize: '11px', color: '#8978f3', display: 'block', marginBottom: '6px' }}>Choose an icon</span>
+            <EmojiPicker value={newApp.emoji} onPick={e => setNewApp({ ...newApp, emoji: e })} />
+          </div>
         </div>}
-        {editingApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px', borderColor: '#5e5285' }}>
+        {editingApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px', borderColor: '#5e5285', alignItems: 'flex-start' }}>
           <span style={{ fontSize: '11px', color: '#8978f3', width: '100%' }}>Editing: {editingApp.name}</span>
-          <input value={editingApp.name} onChange={e => setEditingApp({ ...editingApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 120px' }} />
-          <input value={editingApp.url || ''} onChange={e => setEditingApp({ ...editingApp, url: e.target.value || null })} placeholder="URL" style={{ flex: '1 1 260px' }} />
-          <button type="button" onClick={() => setEditingApp(null)}><X size={16} /></button>
-          <button type="submit" onClick={() => { saveAppEdit(editingApp); setEditingApp(null); setActivity(a => [[now(), 'Settings', `Updated app: ${editingApp.name}`], ...a]) }} style={{ background: '#3d355c', color: '#e1daff', borderRadius: '6px', padding: '0 13px', fontSize: '11px' }}><Check size={14} /> Save</button>
+          <div style={{ width: '100%', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <input value={editingApp.name} onChange={e => setEditingApp({ ...editingApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 120px' }} />
+            <input value={editingApp.url || ''} onChange={e => setEditingApp({ ...editingApp, url: e.target.value || null })} placeholder="URL" style={{ flex: '1 1 260px' }} />
+            <button type="button" onClick={() => setEditingApp(null)}><X size={16} /></button>
+            <button type="submit" onClick={() => { saveAppEdit(editingApp); setEditingApp(null); setActivity(a => [[now(), 'Settings', `Updated app: ${editingApp.name}`], ...a]) }} style={{ background: '#3d355c', color: '#e1daff', borderRadius: '6px', padding: '0 13px', fontSize: '11px' }}><Check size={14} /> Save</button>
+          </div>
+          <div style={{ width: '100%' }}>
+            <span style={{ fontSize: '11px', color: '#8978f3', display: 'block', marginBottom: '6px' }}>Choose an icon</span>
+            <EmojiPicker value={editingApp.emoji} onPick={e => setEditingApp({ ...editingApp, emoji: e })} />
+          </div>
         </div>}
         <div className="app-list" style={{ maxHeight: '300px', overflow: 'auto' }}>
           {[...localAgentsBase, ...homelabBase, ...vpsBase, ...customApps].map(a => <div key={a.id} className="app-row">
-            <span className="app-icon" style={{ color: a.color, background: `${a.color}17` }}>{a.icon}</span>
+            <span className="app-icon" style={{ color: a.color, background: `${a.color}17` }}>{iconOf(a)}</span>
             <span className="app-info"><b>{a.name}</b><small>{a.kind} · {a.group} · {a.port ? ':' + a.port : 'no port'} {a.url ? '→ ' + a.url : '· no link'}</small></span>
             <span className={`state ${a.state?.toLowerCase()}`}><i />{a.state}</span>
             {a.url && <button onClick={() => openService(a)} className="run" title="Test launch"><Play size={14} /></button>}
@@ -494,6 +615,9 @@ function App() {
     </div>}
 
   </>
+
+  if (authState === 'checking') return <div className="login-screen"><div className="login-card"><div className="login-brand"><div className="logo"><Sparkles size={17} /></div><span>ORBITAL</span></div><p className="login-sub" style={{ textAlign: 'center' }}>Loading…</p></div></div>
+  if (authState !== 'loggedin') return <LoginScreen onLogin={(t) => { localStorage.setItem('orbital_token', t); setToken(t); setAuthState('loggedin') }} />
 
   return <div className={`shell ${!sidebarOpen ? 'sidebar-collapsed' : ''}`}>
     <button className="expand-sidebar" onClick={() => setSidebarOpen(true)}><Sparkles size={17} /></button>
@@ -518,14 +642,15 @@ function App() {
       ))}
       <button className="new-workspace"><Plus size={16} />New workspace</button>
       <div className="sidebar-bottom">
-        <button className="nav"><Settings />Settings</button>
+        <button className="nav" onClick={() => { setActiveTab('settings'); setActiveAppId(null) }}><Settings />Settings</button>
+        <button className="nav" onClick={doLogout}><LogOut />Sign out</button>
         <div className="user"><div className="avatar">C</div><span>Chris<small>Local admin</small></span><ChevronDown size={15} /></div>
       </div>
       {openApps.length > 0 && <div style={{ borderTop: '1px solid #29282c', marginTop: '12px', paddingTop: '12px' }}>
         <div className="side-label">OPEN APPS</div>
         {openApps.map(a => (
           <button key={a.id} className={`nav ${activeAppId === a.id ? 'active' : ''}`} onClick={() => setActiveAppId(a.id)}>
-            <span style={{ color: a.color }}>{a.icon}</span>{a.name}
+            <span style={{ color: a.color }}>{iconOf(a)}</span>{a.name}
             <button className="close-app-btn" onClick={e => { e.stopPropagation(); closeApp(a.id) }}><X size={12} /></button>
           </button>
         ))}
@@ -539,7 +664,7 @@ function App() {
         </button>
         {openApps.map(a => (
           <button key={a.id} className={`ws-tab ${activeAppId === a.id ? 'active' : ''}`} onClick={() => setActiveAppId(a.id)}>
-            <span style={{ color: a.color }}>{a.icon}</span> {a.name}
+            <span style={{ color: a.color }}>{iconOf(a)}</span> {a.name}
             <span className="ws-tab-close" onClick={e => { e.stopPropagation(); closeApp(a.id) }}><X size={13} /></span>
           </button>
         ))}
@@ -552,7 +677,7 @@ function App() {
           {activeApp && activeApp.url ? (
             <div className="app-frame-container">
               <div className="app-frame-bar">
-                <span style={{ color: activeApp.color, display: 'flex', alignItems: 'center', gap: '6px' }}>{activeApp.icon} {activeApp.name}</span>
+                <span style={{ color: activeApp.color, display: 'flex', alignItems: 'center', gap: '6px' }}>{iconOf(activeApp)} {activeApp.name}</span>
                 <span className="app-frame-url">{activeApp.url}</span>
                 <button onClick={() => { const f = document.getElementById(`frame-${activeApp.id}`); if (f) f.src = f.src }} title="Reload"><RefreshCw size={14} /></button>
               </div>
@@ -567,6 +692,22 @@ function App() {
         </div>
       )}
     </main>
+
+    {paletteOpen && <div className="palette-overlay" onClick={() => setPaletteOpen(false)}>
+      <div className="palette" onClick={e => e.stopPropagation()}>
+        <div className="palette-input"><Search size={16} /><input autoFocus value={paletteQuery} onChange={e => setPaletteQuery(e.target.value)} placeholder="Search apps, agents, tabs, commands…" /><kbd>esc</kbd></div>
+        <div className="palette-results">
+          {paletteItems.map((item, i) => (
+            <button key={item.type + '-' + item.id + '-' + i} className="palette-item" onClick={() => runPaletteItem(item)}>
+              <span className="palette-icon" style={item.color ? { color: item.color } : {}}>{item.icon}</span>
+              <span className="palette-label">{item.label}</span>
+              <span className="palette-hint">{item.hint}</span>
+            </button>
+          ))}
+          {paletteItems.length === 0 && <div className="palette-empty">No results for "{paletteQuery}"</div>}
+        </div>
+      </div>
+    </div>}
   </div>
 }
 
