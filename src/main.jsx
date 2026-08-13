@@ -175,7 +175,7 @@ function App() {
   const [cpu, setCpu] = useState(37)
   const [ollamaLocal, setOllamaLocal] = useState({ available: false, models: [], active: [] })
   const [ollamaOpen, setOllamaOpen] = useState(false)
-  const [ollamaModel, setOllamaModel] = useState(HOMELAB_OLLAMA_MODELS[0]?.name || '')
+  const [ollamaModel, setOllamaModel] = useState('qwen3.5:4b')
   const [ollamaPrompt, setOllamaPrompt] = useState('')
   const [ollamaReply, setOllamaReply] = useState('')
   const [ollamaError, setOllamaError] = useState('')
@@ -189,6 +189,7 @@ function App() {
   const [homelabStatus, setHomelabStatus] = useState({})
   const [hlOllamaModels, setHlOllamaModels] = useState([])
   const [hlOllamaActive, setHlOllamaActive] = useState([])
+  const [lmstudioModels, setLmstudioModels] = useState([])
   const [openApps, setOpenApps] = useState([])
   const [activeAppId, setActiveAppId] = useState(null)
   const [token, setToken] = useState(() => localStorage.getItem('orbital_token') || null)
@@ -256,8 +257,9 @@ function App() {
         s['n8n'] = n8.status === 'fulfilled' && n8.value.ok ? 'Running' : 'Offline'
         s['homepage'] = hp.status === 'fulfilled' ? 'Running' : 'Offline'
         s['lmstudio'] = lm.status === 'fulfilled' && lm.value.ok ? 'Running' : 'Offline'
-        setHomelabStatus(s)
-        if (o.status === 'fulfilled' && o.value.ok) { const d = await o.value.json(); setHlOllamaModels(d.models || []); try { const pR = await fetchTO('/hl-ollama/api/ps'); if (pR.ok) setHlOllamaActive((await pR.json()).models || []) } catch {} }
+      setHomelabStatus(s)
+      if (o.status === 'fulfilled' && o.value.ok) { const d = await o.value.json(); setHlOllamaModels(d.models || []); try { const pR = await fetchTO('/hl-ollama/api/ps'); if (pR.ok) setHlOllamaActive((await pR.json()).models || []) } catch {} }
+      if (lm.status === 'fulfilled' && lm.value.ok) { try { const d = await lm.value.json(); setLmstudioModels((d.data || []).map(x => typeof x === 'string' ? x : (x.id || x.model || x.name)).filter(Boolean)) } catch { setLmstudioModels([]) } } else setLmstudioModels([])
       } catch {}
     }; chk(); const id = setInterval(chk, 15000); return () => { c = true; clearInterval(id) }
   }, [])
@@ -395,29 +397,91 @@ function App() {
     else if (item.type === 'custom' && item.url) window.open(item.url, '_blank')
   }
 
+  const streamGenerate = async (apiBase, model, prompt, onToken) => {
+    const r = await fetch(apiBase + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, prompt, stream: true }) })
+    if (!r.ok) {
+      let msg = 'Request failed (' + r.status + ')'
+      try { const d = await r.json(); if (d && d.error) msg = d.error } catch {}
+      throw new Error(msg)
+    }
+    const reader = r.body.getReader()
+    const dec = new TextDecoder()
+    let buf = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      let idx
+      while ((idx = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, idx).trim()
+        buf = buf.slice(idx + 1)
+        if (!line) continue
+        let j
+        try { j = JSON.parse(line) } catch { continue }
+        if (j.error) throw new Error(j.error)
+        if (j.response) onToken(j.response)
+      }
+    }
+  }
+
+  const streamOpenAI = async (base, model, prompt, onToken) => {
+    const r = await fetch(base + '/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], stream: true }) })
+    if (!r.ok) {
+      let msg = 'Request failed (' + r.status + ')'
+      try { const d = await r.json(); if (d && d.error) msg = typeof d.error === 'string' ? d.error : (d.error.message || msg) } catch {}
+      throw new Error(msg)
+    }
+    const reader = r.body.getReader()
+    const dec = new TextDecoder()
+    let buf = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      let idx
+      while ((idx = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, idx).trim()
+        buf = buf.slice(idx + 1)
+        if (!line || !line.startsWith('data:')) continue
+        const data = line.slice(5).trim()
+        if (!data || data === '[DONE]') continue
+        let j
+        try { j = JSON.parse(data) } catch { continue }
+        const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content
+        if (delta) onToken(delta)
+      }
+    }
+  }
+
   const sendChat = async (e) => {
     e.preventDefault()
     const text = chatInput.trim()
-    if (!text || !ollamaModel || chatBusy) return
+    const model = ollamaModel || 'qwen3.5:4b'
+    if (!text || !model || chatBusy) return
     setChatInput('')
     setChatBusy(true)
     setChatError('')
-    setChatMessages(m => [...m, { role: 'user', content: text }])
-    const apiBase = ollamaLocal.available ? '/ollama' : '/app/ollama-hl'
+    setChatMessages(m => [...m, { role: 'user', content: text }, { role: 'assistant', content: '' }])
+    const onToken = (tok) => {
+      setChatMessages(m => { const arr = [...m]; const last = arr[arr.length - 1]; if (last && last.role === 'assistant') arr[arr.length - 1] = { ...last, content: (last.content || '') + tok }; return arr })
+    }
     try {
-      const r = await fetch(apiBase + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: text, stream: false }) })
-      const d = await r.json()
-      if (!r.ok) throw new Error(d.error || d.message || 'Request failed')
-      setChatMessages(m => [...m, { role: 'assistant', content: d.response || 'No response from model.' }])
-      setActivity(a => [[now(), 'Ollama', `Chat: ${text.slice(0, 40)}`], ...a])
+      if (model.startsWith('lmstudio:')) {
+        await streamOpenAI('/hl-lmstudio', model.slice('lmstudio:'.length), text, onToken)
+        setActivity(a => [[now(), 'LM Studio', `Chat: ${text.slice(0, 40)}`], ...a])
+      } else {
+        const apiBase = ollamaLocal.available ? '/ollama' : '/app/ollama-hl'
+        await streamGenerate(apiBase, model, text, onToken)
+        setActivity(a => [[now(), 'Ollama', `Chat: ${text.slice(0, 40)}`], ...a])
+      }
     } catch (er) {
-      setChatError(er.message || 'Connection failed — is Ollama running?')
+      setChatError(er.message || 'Connection failed — is the model server running?')
     } finally { setChatBusy(false) }
   }
 
   const addTask = e => { e.preventDefault(); if (!newTask.trim()) return; setTasks(t => [{ id: Date.now(), title: newTask.trim(), owner: 'You', status: 'Queued', time: 'just now' }, ...t]); setActivity(a => [[now(), 'You', `Created task: ${newTask.trim()}`], ...a]); setNewTask(''); setShowComposer(false) }
   const runTask = t => { setTasks(ts => ts.map(x => x.id === t.id ? { ...x, status: 'In progress', owner: 'Codex' } : x)); setActivity(a => [[now(), 'Codex', `Accepted task: ${t.title}`], ...a]) }
-  const askOllama = async e => { e.preventDefault(); if (!ollamaPrompt.trim() || !ollamaModel || ollamaBusy) return; setOllamaBusy(true); setOllamaError(''); setOllamaReply(''); const apiBase = ollamaLocal.available ? '/ollama' : '/app/ollama-hl'; try { const r = await fetch(apiBase + '/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: ollamaModel, prompt: ollamaPrompt.trim(), stream: false }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error || d.message || 'Request failed'); setOllamaReply(d.response || 'No response from model.'); setActivity(a => [[now(), 'Ollama', `Prompted ${ollamaModel}`], ...a]) } catch (er) { setOllamaError(er.message || 'Connection failed — is Ollama running on the homelab?') } finally { setOllamaBusy(false) } }
+  const askOllama = async e => { e.preventDefault(); if (!ollamaPrompt.trim() || !ollamaModel || ollamaBusy) return; setOllamaBusy(true); setOllamaError(''); setOllamaReply(''); const apiBase = ollamaLocal.available ? '/ollama' : '/app/ollama-hl'; try { await streamGenerate(apiBase, ollamaModel, ollamaPrompt.trim(), tok => setOllamaReply(r => (r || '') + tok)); setActivity(a => [[now(), 'Ollama', `Prompted ${ollamaModel}`], ...a]) } catch (er) { setOllamaError(er.message || 'Connection failed — is Ollama running on the homelab?') } finally { setOllamaBusy(false) } }
 
   const homelabOnline = Object.values(homelabStatus).filter(s => s === 'Running').length
   const homelabOffline = Object.values(homelabStatus).filter(s => s === 'Offline').length
@@ -823,10 +887,15 @@ function App() {
         <div className="chat-header">
           <span className="chat-title"><span className="logo"><Sparkles size={13} /></span> AI Assistant</span>
           <select value={ollamaModel} onChange={e => setOllamaModel(e.target.value)} className="chat-model">
-            {(ollamaLocal.available ? ollamaLocal.models : HOMELAB_OLLAMA_MODELS).map(m => {
-              const name = typeof m === 'string' ? m : m.name
-              return <option key={name} value={name}>{name}</option>
-            })}
+            <optgroup label="Ollama">
+              {(ollamaLocal.available ? ollamaLocal.models : HOMELAB_OLLAMA_MODELS).map(m => {
+                const name = typeof m === 'string' ? m : m.name
+                return <option key={name} value={name}>{name}</option>
+              })}
+            </optgroup>
+            {lmstudioModels.length > 0 && <optgroup label="LM Studio">
+              {lmstudioModels.map(m => <option key={'lm-' + m} value={'lmstudio:' + m}>{m}</option>)}
+            </optgroup>}
           </select>
           <button className="chat-close" onClick={() => setChatOpen(false)}><X size={18} /></button>
         </div>
