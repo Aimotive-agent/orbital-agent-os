@@ -301,7 +301,13 @@ function App() {
   const isExternal = (url) => {
     if (!url) return false
     if (url.startsWith('/')) return false
-    try { return !new URL(url, window.location.origin).hostname.endsWith('veritasglobalai.com') } catch { return true }
+    let host
+    try { host = new URL(url, window.location.origin).hostname } catch { return false }
+    if (!host) return false
+    if (host.endsWith('veritasglobalai.com')) return false
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return false
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false
+    return true
   }
 
   const openService = (svc) => {
