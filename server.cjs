@@ -82,6 +82,8 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
         const $ = cheerio.load(body)
         if ($('base').length === 0) {
           $('head').prepend(`<base href="${base}">`)
+        } else {
+          $('base').attr('href', base)
         }
         $('head').prepend(`<script>${buildPatchScript(base)}</script>`)
         $('[src^="/"]').each((i, el) => {
