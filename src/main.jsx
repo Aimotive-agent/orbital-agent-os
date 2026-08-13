@@ -33,10 +33,10 @@ const initialTasks = [
 
 const LOCAL_AGENTS = [
   { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', url: null },
-  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', url: 'http://192.168.1.33:36783/' },
-  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', url: 'http://192.168.1.33:9119/' },
-  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', url: 'http://192.168.1.33:8888/' },
-  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', url: 'http://192.168.1.33:3773/' },
+  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', url: 'http://localhost:36783/' },
+  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', url: 'http://localhost:9119/' },
+  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', url: 'http://localhost:8888/' },
+  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', url: 'http://localhost:3773/' },
   { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', url: null },
   { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', url: null },
   { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', url: null },
@@ -44,13 +44,13 @@ const LOCAL_AGENTS = [
 
 const HOMELAB_SERVICES = [
   { id: 'ollama-hl', name: 'Ollama', icon: <Bot />, kind: 'AI · 17 models', state: 'Running', color: '#ffb870', task: 'LLM runtime', usage: '—', port: 11434, group: 'AI', url: null },
-  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 3004, group: 'AI', url: 'http://192.168.1.42:3004/' },
+  { id: 'lmstudio', name: 'LM Studio', icon: <Brain />, kind: 'AI Desktop', state: 'Running', color: '#c084fc', task: 'Model server', usage: '—', port: 1234, group: 'AI', url: 'http://localhost:1234/' },
   { id: 'dify', name: 'Dify AI', icon: <Workflow />, kind: 'AI Dev Platform', state: 'Running', color: '#60a5fa', task: 'Agent builder + RAG', usage: '—', port: 3003, group: 'AI', url: null },
   { id: 'convex', name: 'Convex', icon: <Database />, kind: 'Backend', state: 'Running', color: '#f472b6', task: 'Real-time backend', usage: '—', port: 6791, group: 'Dev', url: null },
   { id: 'n8n', name: 'n8n', icon: <Workflow />, kind: 'Automation', state: 'Running', color: '#fb923c', task: 'Workflow automation', usage: '—', port: 5678, group: 'Dev', url: 'http://192.168.1.42:5678/' },
   { id: 'jellyfin', name: 'Jellyfin', icon: <Film />, kind: 'Media Server', state: 'Running', color: '#a78bfa', task: 'Media streaming', usage: '—', port: 8096, group: 'Media', url: 'http://192.168.1.42:8096/web/' },
   { id: 'immich', name: 'Immich', icon: <Camera />, kind: 'Photo Library', state: 'Running', color: '#34d399', task: 'Photo management', usage: '—', port: 2283, group: 'Media', url: 'http://192.168.1.42:2283/' },
-  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', url: null },
+  { id: 'nextcloud', name: 'Nextcloud', icon: <Cloud />, kind: 'Cloud Storage', state: 'Running', color: '#38bdf8', task: 'File sync & share', usage: '—', port: 8866, group: 'Productivity', url: 'http://192.168.1.42:8866/' },
   { id: 'paperless', name: 'Paperless-ngx', icon: <FileText />, kind: 'Doc Manager', state: 'Running', color: '#a3e635', task: 'Document archive', usage: '—', port: 8060, group: 'Productivity', url: 'http://192.168.1.42:8060/' },
   { id: 'obsidian', name: 'Obsidian', icon: <BookOpen />, kind: 'Knowledge Base', state: 'Running', color: '#c084fc', task: 'Notes & wiki', usage: '—', port: 3000, group: 'Productivity', url: null },
   { id: 'hivekeep', name: 'HiveKeep', icon: <FolderOpen />, kind: 'Password Mgr', state: 'Running', color: '#fbbf24', task: 'Secrets', usage: '—', port: 8018, group: 'Productivity', url: 'http://192.168.1.42:8018/' },
