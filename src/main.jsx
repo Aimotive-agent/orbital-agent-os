@@ -33,6 +33,10 @@ const initialTasks = [
 
 const LOCAL_AGENTS = [
   { id: 'codex', name: 'Codex', icon: <Code2 />, kind: 'Coding agent', state: 'Working', color: '#9b8cff', task: 'Agent OS interface', usage: '1.8 GB', port: null, group: 'Agents', iframe: null },
+  { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: null, group: 'Agents', iframe: null },
+  { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: null, group: 'Agents', iframe: null },
+  { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: null, group: 'Agents', iframe: null },
+  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: null, group: 'Agents', iframe: null },
   { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', iframe: null },
   { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', iframe: null },
   { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', iframe: null },
@@ -153,6 +157,7 @@ function App() {
   const [newMcp, setNewMcp] = useState({ name: '', endpoint: '', type: 'remote' })
   const [customApps, setCustomApps] = useState([])
   const [showAddApp, setShowAddApp] = useState(false)
+  const [editingApp, setEditingApp] = useState(null)
   const [newApp, setNewApp] = useState({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' })
   const [localAppMode, setLocalAppMode] = useState(null)
 
@@ -451,20 +456,33 @@ function App() {
         <div className="panel-heading"><div><p className="eyebrow">APP MANAGEMENT</p><h2>Custom Apps & Services</h2></div><button onClick={() => { setShowAddApp(true); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }) }} className="add-task"><Plus size={16} />Add</button></div>
         {showAddApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px' }}>
           <input value={newApp.name} onChange={e => setNewApp({ ...newApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 100px' }} />
-          <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL or proxy path" style={{ flex: '1 1 180px' }} />
+          <input value={newApp.url} onChange={e => setNewApp({ ...newApp, url: e.target.value })} placeholder="URL or proxy path (e.g. /app/myapp/)" style={{ flex: '1 1 180px' }} />
           <input value={newApp.kind} onChange={e => setNewApp({ ...newApp, kind: e.target.value })} placeholder="Kind (e.g. 'Media Server')" style={{ flex: '1 1 130px' }} />
           <input value={newApp.port} onChange={e => setNewApp({ ...newApp, port: e.target.value })} placeholder="Port" style={{ flex: '0 0 60px' }} />
           <input value={newApp.group} onChange={e => setNewApp({ ...newApp, group: e.target.value })} placeholder="Group" style={{ flex: '0 0 90px' }} />
           <button type="button" onClick={() => setShowAddApp(false)}><X size={16} /></button>
           <button type="submit" onClick={() => { if (newApp.name) { setCustomApps(c => [...c, { id: 'custom-' + Date.now(), name: newApp.name, icon: <Box />, kind: newApp.kind || 'Service', state: 'Running', color: '#aaa', task: '', usage: '—', port: parseInt(newApp.port) || null, group: newApp.group || 'Custom', iframe: newApp.url || null, workspace: newApp.workspace }]); setShowAddApp(false); setNewApp({ name: '', url: '', workspace: ['local'], icon: '', kind: '', group: '', port: '' }); setActivity(a => [[now(), 'Settings', `Added app: ${newApp.name}`], ...a]) } }}>Add App</button>
         </div>}
+        {editingApp && <div className="composer" style={{ flexWrap: 'wrap', gap: '6px', borderColor: '#5e5285' }}>
+          <span style={{ fontSize: '11px', color: '#8978f3', width: '100%' }}>Editing: {editingApp.name}</span>
+          <input value={editingApp.name} onChange={e => setEditingApp({ ...editingApp, name: e.target.value })} placeholder="Name" style={{ flex: '1 1 100px' }} />
+          <input value={editingApp.iframe || ''} onChange={e => setEditingApp({ ...editingApp, iframe: e.target.value || null })} placeholder="URL or proxy path" style={{ flex: '1 1 180px' }} />
+          <input value={editingApp.kind} onChange={e => setEditingApp({ ...editingApp, kind: e.target.value })} placeholder="Kind" style={{ flex: '1 1 130px' }} />
+          <input value={editingApp.port || ''} onChange={e => setEditingApp({ ...editingApp, port: parseInt(e.target.value) || null })} placeholder="Port" style={{ flex: '0 0 60px' }} />
+          <input value={editingApp.group} onChange={e => setEditingApp({ ...editingApp, group: e.target.value })} placeholder="Group" style={{ flex: '0 0 90px' }} />
+          <button type="button" onClick={() => setEditingApp(null)}><X size={16} /></button>
+          <button type="submit" onClick={() => { setCustomApps(cs => cs.map(a => a.id === editingApp.id ? { ...editingApp, icon: <Box /> } : a)); setEditingApp(null); setActivity(a => [[now(), 'Settings', `Updated app: ${editingApp.name}`], ...a]) }} style={{ background: '#3d355c', color: '#e1daff', borderRadius: '6px', padding: '0 13px', fontSize: '11px' }}><Check size={14} /> Save</button>
+        </div>}
         <div className="app-list" style={{ maxHeight: '300px', overflow: 'auto' }}>
           {[...LOCAL_AGENTS, ...HOMELAB_SERVICES, ...VPS_SERVICES, ...customApps].map(a => <div key={a.id} className="app-row">
             <span className="app-icon" style={{ color: a.color, background: `${a.color}17` }}>{a.icon}</span>
             <span className="app-info"><b>{a.name}</b><small>{a.kind} · {a.group} · {a.port ? ':' + a.port : 'no port'} {a.iframe ? '→ ' + a.iframe : '· no link'}</small></span>
             <span className={`state ${a.state?.toLowerCase()}`}><i />{a.state}</span>
-            {a.iframe && <button onClick={() => { const w = customApps.find(x => x.id === a.id) ? ['local','homelab','vps'] : []; openService(a) }} className="run" title="Test launch"><Play size={14} /></button>}
-            {customApps.some(x => x.id === a.id) && <button onClick={() => setCustomApps(cs => cs.filter(x => x.id !== a.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>}
+            {a.iframe && <button onClick={() => openService(a)} className="run" title="Test launch"><Play size={14} /></button>}
+            {customApps.some(x => x.id === a.id) && <>
+              <button onClick={() => setEditingApp({ ...a })} style={{ background: 'transparent', border: 0, color: '#8978f3', padding: '4px', borderRadius: '4px' }} title="Edit"><Settings size={14} /></button>
+              <button onClick={() => setCustomApps(cs => cs.filter(x => x.id !== a.id))} style={{ background: 'transparent', border: 0, color: '#ee7777', padding: '4px', borderRadius: '4px' }}><Trash2 size={14} /></button>
+            </>}
           </div>)}
         </div>
       </section>
