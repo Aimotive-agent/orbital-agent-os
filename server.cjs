@@ -3,6 +3,7 @@ const httpProxy = require('http-proxy')
 const cheerio = require('cheerio')
 const path = require('path')
 const crypto = require('crypto')
+const { spawn } = require('child_process')
 
 const app = express()
 
@@ -52,15 +53,15 @@ const targets = {
   openship: 'http://192.168.1.42:3148',
   nextcloud: 'https://192.168.1.42:8866', // HTTPS-only upstream (self-signed)
   'ollama-hl': 'http://192.168.1.42:11434',
-  opencode: 'http://192.168.1.33:36783',
-  hermes: 'http://192.168.1.33:9119',
-  unsloth: 'http://192.168.1.33:8888',
-  t3code: 'http://192.168.1.33:3773',
+  opencode: 'http://127.0.0.1:36783',
+  hermes: 'http://127.0.0.1:9119',
+  unsloth: 'http://127.0.0.1:8888',
+  t3code: 'http://127.0.0.1:3773',
 }
 
 function buildPatchScript(base) {
   const b = JSON.stringify(base)
-  return `(function(){var b=${b};function r(u){if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length).replace(/^\\//,'');if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);var wm=u.match(/^(wss?:\\/\\/[^/]+)(\\/.*|$)/);if(wm&&wm[2].indexOf(b)!==0)return wm[1]+b+wm[2].slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}var ow=window.WebSocket;if(ow){window.WebSocket=function(u,p){return new ow(r(u),p);};window.WebSocket.prototype=ow.prototype;window.WebSocket.CONNECTING=ow.CONNECTING;window.WebSocket.OPEN=ow.OPEN;window.WebSocket.CLOSING=ow.CLOSING;window.WebSocket.CLOSED=ow.CLOSED;}var oh=window.history&&window.history.pushState;if(oh){window.history.pushState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return oh.apply(this,arguments);};var or2=window.history&&window.history.replaceState;if(or2){window.history.replaceState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return or2.apply(this,arguments);};}}var oc=document.createElement;if(oc){document.createElement=function(t){var e=oc.call(this,t);if(e&&typeof t==='string'){var tg=String(t).toLowerCase();var p=tg==='link'?'href':(tg==='script'||tg==='img'||tg==='iframe'||tg==='audio'||tg==='video'||tg==='source'||tg==='embed')?'src':null;if(p){try{var d=Object.getOwnPropertyDescriptor(e.__proto__,p)||Object.getOwnPropertyDescriptor(e,p);if(d&&d.set){Object.defineProperty(e,p,{configurable:true,get:function(){return d.get.call(e)},set:function(v){d.set.call(e,r(v))}});}}catch(_){}}}return e;};}})();`
+  return `(function(){var b=${b};function r(u){if(u&&typeof u.href==='string'&&typeof u==='object'&&!(u instanceof Request)){u=u.href;}if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length).replace(/^\\//,'');if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);var wm=u.match(/^(wss?:\\/\\/[^/]+)(\\/.*|$)/);if(wm&&wm[2].indexOf(b)!==0)return wm[1]+b+wm[2].slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.href&&typeof i==='object'&&!(i instanceof Request)){try{i=new URL(r(i.href));}catch(e){}}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}var ow=window.WebSocket;if(ow){window.WebSocket=function(u,p){return new ow(r(u),p);};window.WebSocket.prototype=ow.prototype;window.WebSocket.CONNECTING=ow.CONNECTING;window.WebSocket.OPEN=ow.OPEN;window.WebSocket.CLOSING=ow.CLOSING;window.WebSocket.CLOSED=ow.CLOSED;}var oh=window.history&&window.history.pushState;if(oh){window.history.pushState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return oh.apply(this,arguments);};var or2=window.history&&window.history.replaceState;if(or2){window.history.replaceState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return or2.apply(this,arguments);};}}var oc=document.createElement;if(oc){document.createElement=function(t){var e=oc.call(this,t);if(e&&typeof t==='string'){var tg=String(t).toLowerCase();var p=tg==='link'?'href':(tg==='script'||tg==='img'||tg==='iframe'||tg==='audio'||tg==='video'||tg==='source'||tg==='embed')?'src':null;if(p){try{var d=Object.getOwnPropertyDescriptor(e.__proto__,p)||Object.getOwnPropertyDescriptor(e,p);if(d&&d.set){Object.defineProperty(e,p,{configurable:true,get:function(){return d.get.call(e)},set:function(v){d.set.call(e,r(v))}});}}catch(_){}}}return e;};}})();`
 }
 
 // Static rewriting of root-absolute asset/module paths inside SERVED JS and
@@ -277,6 +278,25 @@ app.get('/api/me', function (req, res) {
   } else {
     res.status(401).json({ error: 'Unauthorized' })
   }
+})
+
+// Native desktop app launcher — for apps with no web server mode (e.g. T3 Code
+// is an Electron app). Spawns the real app on the user's display so clicking
+// the tile opens the actual program instead of a dead proxied URL.
+const NATIVE_APPS = {
+  t3code: { cmd: '/usr/bin/t3code', env: {} },
+}
+
+app.post('/api/launch/:app', express.json(), function (req, res) {
+  const entry = NATIVE_APPS[req.params.app]
+  if (!entry) { res.status(404).json({ error: 'Unknown app' }); return }
+  const child = spawn(entry.cmd, [], {
+    detached: true,
+    stdio: 'ignore',
+    env: { ...process.env, ...entry.env },
+  })
+  child.unref()
+  res.json({ ok: true, pid: child.pid })
 })
 
 app.use(express.static(path.join(__dirname, 'dist')))

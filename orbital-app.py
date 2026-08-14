@@ -5,6 +5,7 @@ Launches the local Node server if it isn't running, then opens the
 dashboard in its own window instead of a browser.
 """
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -14,6 +15,20 @@ APP_URL = 'http://localhost:5173/'
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 ICON_PATH = os.path.join(PROJECT_DIR, 'assets', 'orbital-icon.svg')
 LOG_PATH = os.path.join(PROJECT_DIR, 'orbital-server.log')
+
+# Local agent web UIs the dashboard proxies under /app/<name>/.
+# Each is started on demand if its port isn't already listening.
+AGENTS = [
+    {'name': 'hermes', 'port': 9119,
+     'cmd': ['/home/chrispc/.local/bin/hermes', 'dashboard', '--port', '9119', '--host', '127.0.0.1', '--no-open'],
+     'cwd': '/home/chrispc/.hermes/hermes-agent'},
+    {'name': 'opencode', 'port': 36783,
+     'cmd': ['/home/chrispc/.local/bin/opencode', 'serve', '--port', '36783', '--hostname', '127.0.0.1'],
+     'cwd': '/home/chrispc'},
+    {'name': 'unsloth', 'port': 8888,
+     'cmd': ['/home/chrispc/.local/bin/unsloth', 'studio', '--port', '8888', '--host', '127.0.0.1'],
+     'cwd': '/home/chrispc'},
+]
 
 
 def server_up():
@@ -43,8 +58,33 @@ def ensure_server():
         time.sleep(0.2)
 
 
+def port_open(port):
+    try:
+        with socket.create_connection(('127.0.0.1', port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
+def ensure_agents():
+    """Start the local agent web UIs (Hermes, OpenCode, Unsloth) if needed."""
+    for agent in AGENTS:
+        if port_open(agent['port']):
+            continue
+        with open(LOG_PATH, 'a') as log:
+            log.write('=== orbital-app.py starting %s (%s) ===\n' % (agent['name'], time.ctime()))
+            subprocess.Popen(
+                agent['cmd'],
+                cwd=agent['cwd'],
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+
+
 def main():
     ensure_server()
+    ensure_agents()
 
     import gi
     gi.require_version('Gtk', '3.0')

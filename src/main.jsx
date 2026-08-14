@@ -39,7 +39,7 @@ const LOCAL_AGENTS = [
   { id: 'opencode', name: 'OpenCode', icon: <Terminal />, kind: 'Coding agent', state: 'Running', color: '#64d3aa', task: 'Interactive coding', usage: '—', port: 36783, group: 'Agents', url: '/app/opencode/' },
   { id: 'hermes', name: 'Hermes', icon: <Brain />, kind: 'AI Agent', state: 'Running', color: '#c084fc', task: 'LLM agent', usage: '—', port: 9119, group: 'Agents', url: '/app/hermes/' },
   { id: 'unsloth', name: 'Unsloth Studio', icon: <Workflow />, kind: 'Fine-tuning', state: 'Running', color: '#f472b6', task: 'Model training', usage: '—', port: 8888, group: 'Agents', url: '/app/unsloth/' },
-  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Running', color: '#38bdf8', task: 'Web IDE', usage: '—', port: 3773, group: 'Agents', url: '/app/t3code/' },
+  { id: 't3code', name: 'T3 Code', icon: <Code2 />, kind: 'Code editor', state: 'Ready', color: '#38bdf8', task: 'Web IDE (desktop app)', usage: '—', port: 3773, group: 'Agents', url: null, native: 't3code' },
   { id: 'terminal', name: 'Terminal', icon: <Terminal />, kind: 'System shell', state: 'Running', color: '#86d5b2', task: 'vite dev server', usage: '112 MB', port: null, group: 'System', url: null },
   { id: 'browser', name: 'Browser', icon: <Box />, kind: 'Web workspace', state: 'Running', color: '#78b7ff', task: '6 tabs open', usage: '1.2 GB', port: null, group: 'System', url: null },
   { id: 'ollama-local', name: 'Ollama (local)', icon: <Bot />, kind: 'AI Runtime', state: 'Running', color: '#ffb870', task: 'Checking status', usage: '—', port: 11434, group: 'AI', url: null },
@@ -342,6 +342,11 @@ function App() {
     } else if (svc.id === 'browser') {
       setLocalAppMode('browser')
       setOllamaOpen(true)
+    } else if (svc.native) {
+      // Desktop app with no web server mode — launch the real program.
+      fetch('/api/launch/' + svc.native, { method: 'POST' }).then(r => r.json()).then(d => {
+        setActivity(a => [[now(), 'System', d.ok ? `Launched ${svc.name} on this PC` : `Failed to launch ${svc.name}`], ...a])
+      }).catch(() => setActivity(a => [[now(), 'System', `Failed to launch ${svc.name}`], ...a]))
     }
     setActivity(a => [[now(), 'Workspace', `Opened ${svc.name}`], ...a])
   }
@@ -532,7 +537,7 @@ function App() {
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind} · {svc.task}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
               <span className="usage">{svc.usage}</span>
-              {svc.url && <span className="launch-hint">Launch →</span>}
+              {(svc.url || svc.native) && <span className="launch-hint">Launch →</span>}
               <MoreHorizontal size={17} />
             </button>
           ))}
@@ -610,13 +615,13 @@ function App() {
       <section className="panel apps-panel" style={{ gridColumn: '1 / -1' }}>
         <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>All Agents <span>{filteredAgents.length}</span></h2></div></div>
         <div className="app-list">{filteredAgents.map(svc => (
-          <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : null}>
+          <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : svc.native ? handleLocalApp(svc) : null}>
             <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{iconOf(svc)}</span>
             <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
             <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
             <span className="usage">{svc.task}</span>
             {svc.port && <span className="port-tag">:{svc.port}</span>}
-            {svc.url && <span className="launch-hint">Launch →</span>}
+            {(svc.url || svc.native) && <span className="launch-hint">Launch →</span>}
             <MoreHorizontal size={17} />
           </div>
         ))}</div>
@@ -634,13 +639,13 @@ function App() {
         return <section key={group} className="panel apps-panel" style={group === 'AI' ? { gridColumn: '1 / -1' } : {}}>
           <div className="panel-heading"><div><p className="eyebrow">{activeWorkspace.toUpperCase()}</p><h2>{group}</h2></div></div>
           <div className="app-list">{ga.map(svc => (
-            <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : null}>
+            <div key={svc.id} className="app-row" onClick={() => svc.url ? openService(svc) : svc.native ? handleLocalApp(svc) : null}>
               <span className="app-icon" style={{ color: svc.color, background: `${svc.color}17` }}>{iconOf(svc)}</span>
               <span className="app-info"><b>{svc.name}</b><small>{svc.kind}</small></span>
               <span className={`state ${svc.state.toLowerCase()}`}><i />{svc.state}</span>
               <span className="usage">{svc.task}</span>
               {svc.port && <span className="port-tag">:{svc.port}</span>}
-              {svc.url && <span className="launch-hint">Launch →</span>}
+              {(svc.url || svc.native) && <span className="launch-hint">Launch →</span>}
               <MoreHorizontal size={17} />
             </div>
           ))}</div>
