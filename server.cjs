@@ -50,7 +50,7 @@ const targets = {
   langflow: 'http://64.118.132.92:7860',
   kestra: 'http://64.118.132.92:8085',
   openship: 'http://192.168.1.42:3148',
-  nextcloud: 'http://192.168.1.42:8866',
+  nextcloud: 'https://192.168.1.42:8866', // HTTPS-only upstream (self-signed)
   'ollama-hl': 'http://192.168.1.42:11434',
   opencode: 'http://192.168.1.33:36783',
   hermes: 'http://192.168.1.33:9119',
@@ -179,7 +179,7 @@ app.use('/app/:name', function (req, res) {
     return plainProxy.web(req, res, { target: 'http://192.168.1.42:11434', changeOrigin: true })
   }
 
-  proxy.web(req, res, { target, selfHandleResponse: true })
+  proxy.web(req, res, { target, selfHandleResponse: true, secure: false })
 })
 
 app.use('/ollama/api', function (req, res) {
@@ -232,7 +232,13 @@ app.use(function (req, res, next) {
   if (req.method !== 'GET') return next()
   if (!/^\/(auth|login|signin|signup|oauth|sso|oidc)(\/.*)?$/.test(req.path)) return next()
   const rd = req.query && typeof req.query.redirect === 'string' ? req.query.redirect : ''
-  const m = rd.match(/^\/(app\/[^/]+)/)
+  let m = rd.match(/^\/(app\/[^/]+)/)
+  if (!m) {
+    // No redirect param (e.g. Immich goes straight to /auth/login) — use the
+    // Referer to figure out which proxied app sent us here.
+    const ref = String(req.headers.referer || '')
+    m = ref.match(/https?:\/\/[^/]+\/(app\/[^/]+)/)
+  }
   if (!m) return next()
   return res.redirect(302, '/' + m[1] + req.path + req.originalUrl.slice(req.path.length))
 })
@@ -258,5 +264,5 @@ server.on('upgrade', function (req, socket, head) {
   const target = targets[name]
   if (!target) { return socket.destroy() }
   req.url = url.replace('/app/' + name, '') || '/'
-  proxy.ws(req, socket, head, { target })
+  proxy.ws(req, socket, head, { target, secure: false })
 })
