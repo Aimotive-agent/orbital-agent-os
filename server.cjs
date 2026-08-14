@@ -8,6 +8,7 @@ const app = express()
 
 const AUTH_USER = process.env.AUTH_USER || 'Homelab'
 const AUTH_PASS = process.env.AUTH_PASS || 'Zasada3434'
+if (!process.env.AUTH_USER || !process.env.AUTH_PASS) console.warn('[auth] AUTH_USER/AUTH_PASS not set — using built-in default credentials. Set them as environment variables to override.')
 const AUTH_TTL = 24 * 60 * 60 * 1000
 const sessions = new Map()
 

@@ -6,10 +6,18 @@ A Linux-first control surface for the apps, coding tools, and AI agents on one m
 
 ```bash
 npm install
-npm run dev
+npm run build      # production web bundle into dist/
+node server.cjs    # full app — dashboard, auth, and service proxies — on http://localhost:5173
 ```
 
-Open the local address printed by Vite (normally `http://localhost:5173`). Build a production web bundle with `npm run build`.
+Hot-reload development mode (Vite + API server side by side):
+
+```bash
+PORT=5174 node server.cjs   # terminal 1: auth API + app proxies for dev
+npm run dev                 # terminal 2: Vite dev server on http://localhost:5173
+```
+
+In dev mode the Vite proxy forwards `/api/*` and `/app/*` to the API server on port 5174. Override the login with `AUTH_USER` / `AUTH_PASS` environment variables.
 
 ## Current MVP
 

@@ -346,8 +346,9 @@ function App() {
     setActivity(a => [[now(), 'Workspace', `Opened ${svc.name}`], ...a])
   }
   const closeApp = (id) => {
-    setOpenApps(a => a.filter(x => x.id !== id))
-    if (activeAppId === id) setActiveAppId(openApps.length > 1 ? openApps.find(a => a.id !== id)?.id || null : null)
+    const remaining = openApps.filter(a => a.id !== id)
+    setOpenApps(remaining)
+    if (activeAppId === id) setActiveAppId(remaining[0]?.id || null)
   }
 
   const iconOf = (s) => s.emoji ? <span className="app-emoji">{s.emoji}</span> : (s.icon || <Box />)
@@ -820,10 +821,10 @@ function App() {
       {openApps.length > 0 && <div style={{ borderTop: '1px solid #29282c', marginTop: '12px', paddingTop: '12px' }}>
         <div className="side-label">OPEN APPS</div>
         {openApps.map(a => (
-          <button key={a.id} className={`nav ${activeAppId === a.id ? 'active' : ''}`} onClick={() => setActiveAppId(a.id)}>
+          <div key={a.id} role="button" tabIndex={0} className={`nav ${activeAppId === a.id ? 'active' : ''}`} onClick={() => setActiveAppId(a.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setActiveAppId(a.id) }}>
             <span style={{ color: a.color }}>{iconOf(a)}</span>{a.name}
             <button className="close-app-btn" onClick={e => { e.stopPropagation(); closeApp(a.id) }}><X size={12} /></button>
-          </button>
+          </div>
         ))}
       </div>}
     </aside>

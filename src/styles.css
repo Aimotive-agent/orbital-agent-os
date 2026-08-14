@@ -11,7 +11,7 @@ button{color:inherit;cursor:pointer}
 .logo{width:27px;height:27px;display:grid;place-items:center;color:#201d2c;background:linear-gradient(135deg,#c5b8ff,#8978f3);border-radius:8px}
 .brand button{margin-left:auto;background:none;border:0;color:#85838a}
 .sidebar nav{display:grid;gap:3px}
-.nav,.workspace,.new-workspace{border:0;background:transparent;width:100%;text-align:left;display:flex;align-items:center;gap:12px;color:#95939c;padding:10px 11px;border-radius:7px;transition:background .15s}
+.nav,.workspace,.new-workspace{border:0;background:transparent;width:100%;text-align:left;display:flex;align-items:center;gap:12px;color:#95939c;padding:10px 11px;border-radius:7px;transition:background .15s;cursor:pointer}
 .nav svg{width:18px}
 .nav.active{background:#29272e;color:#faf9fc}
 .nav em{margin-left:auto;background:#5d4fc8;color:#e5e0ff;font-style:normal;border-radius:10px;padding:1px 6px;font-size:11px}
@@ -75,7 +75,7 @@ header .subhead b{color:#e5e1e8}
 .state.running i,.state.working i{background:#64d3aa}
 .state.idle i{background:#facc15}
 .state.offline i,.state.unavailable i{background:#ee7777}
-.state.checking… i{background:#facc15}
+.state.checking i{background:#facc15}
 .usage{font-size:11px;color:#89848f;white-space:nowrap}
 .selected-app{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #2a272e;padding-top:14px;margin-top:14px}
 .selected-app>div{display:flex;align-items:center;gap:10px}

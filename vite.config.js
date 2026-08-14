@@ -23,6 +23,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/ollama': { target: 'http://127.0.0.1:11434', changeOrigin: true, rewrite: p => p.replace(/^\/ollama/, '') || '/' },
+      // Dev-only API + app proxies — forward to server.cjs (run it as: PORT=5174 node server.cjs)
+      '/api': { target: 'http://localhost:5174', changeOrigin: true },
+      '/app': { target: 'http://localhost:5174', changeOrigin: true, ws: true },
       '/hl-ollama': makeProxy('192.168.1.42', 11434, 'hl-ollama'),
       '/hl-jellyfin': makeProxy('192.168.1.42', 8096, 'hl-jellyfin'),
       '/hl-immich': makeProxy('192.168.1.42', 2283, 'hl-immich'),
