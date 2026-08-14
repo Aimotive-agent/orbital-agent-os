@@ -60,7 +60,7 @@ const targets = {
 
 function buildPatchScript(base) {
   const b = JSON.stringify(base)
-  return `(function(){var b=${b};function r(u){if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length).replace(/^\\//,'');if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);var wm=u.match(/^(wss?:\\/\\/[^/]+)(\\/.*|$)/);if(wm&&wm[2].indexOf(b)!==0)return wm[1]+b+wm[2].slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}var ow=window.WebSocket;if(ow){window.WebSocket=function(u,p){return new ow(r(u),p);};window.WebSocket.prototype=ow.prototype;window.WebSocket.CONNECTING=ow.CONNECTING;window.WebSocket.OPEN=ow.OPEN;window.WebSocket.CLOSING=ow.CLOSING;window.WebSocket.CLOSED=ow.CLOSED;}})();`
+  return `(function(){var b=${b};function r(u){if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length).replace(/^\\//,'');if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);var wm=u.match(/^(wss?:\\/\\/[^/]+)(\\/.*|$)/);if(wm&&wm[2].indexOf(b)!==0)return wm[1]+b+wm[2].slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}var ow=window.WebSocket;if(ow){window.WebSocket=function(u,p){return new ow(r(u),p);};window.WebSocket.prototype=ow.prototype;window.WebSocket.CONNECTING=ow.CONNECTING;window.WebSocket.OPEN=ow.OPEN;window.WebSocket.CLOSING=ow.CLOSING;window.WebSocket.CLOSED=ow.CLOSED;}var oh=window.history&&window.history.pushState;if(oh){window.history.pushState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return oh.apply(this,arguments);};var or2=window.history&&window.history.replaceState;if(or2){window.history.replaceState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return or2.apply(this,arguments);};}}var oc=document.createElement;if(oc){document.createElement=function(t){var e=oc.call(this,t);if(e&&typeof t==='string'){var tg=String(t).toLowerCase();var p=tg==='link'?'href':(tg==='script'||tg==='img'||tg==='iframe'||tg==='audio'||tg==='video'||tg==='source'||tg==='embed')?'src':null;if(p){try{var d=Object.getOwnPropertyDescriptor(e.__proto__,p)||Object.getOwnPropertyDescriptor(e,p);if(d&&d.set){Object.defineProperty(e,p,{configurable:true,get:function(){return d.get.call(e)},set:function(v){d.set.call(e,r(v))}});}}catch(_){}}}return e;};}})();`
 }
 
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
@@ -107,6 +107,24 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
     proxyRes.on('end', () => {
       try {
         let body = Buffer.concat(chunks).toString()
+        // Some apps (SvelteKit, etc.) emit root-absolute asset/module paths
+        // inside inline scripts — dynamic import(), runtime URL strings —
+        // which the attribute rewrites below cannot fix. Repoint them at
+        // the proxied base so they load through the proxy.
+        body = body.replace(/(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi, function (full, open, inner, close) {
+          if (/\bsrc\s*=/.test(open)) return full
+          // SvelteKit-style router base: built for '/', served under a subpath.
+          // Note: SvelteKit requires base WITHOUT a trailing slash (it does
+          // pathname.slice(base.length) for route matching).
+          inner = inner.replace(/\bbase\s*:\s*["']([^"']*)["']/g, function (m, v) {
+            if (v === '' || v.charAt(0) === '/') return 'base:"' + base.replace(/\/$/, '') + '"'
+            return m
+          })
+          inner = inner.replace(/(["'])(\/(?!\/)[^"']*?\.(?:js|mjs|css|png|jpe?g|svg|gif|webp|ico|woff2?|ttf|otf|json|wasm)(?:[?#][^"']*)?)/g, function (m, q, p) {
+            return p.indexOf(base) === 0 ? m : q + base + p.slice(1)
+          })
+          return open + inner + close
+        })
         const $ = cheerio.load(body)
         if ($('base').length === 0) {
           $('head').prepend(`<base href="${base}">`)
@@ -206,6 +224,18 @@ app.get('/api/me', function (req, res) {
 })
 
 app.use(express.static(path.join(__dirname, 'dist')))
+
+// Some proxied apps (e.g. SvelteKit/Open WebUI) do client-side redirects to
+// root-absolute paths like /auth?redirect=/app/openwebui/. Map them back
+// under the proxied base so they don't fall into the dashboard SPA.
+app.use(function (req, res, next) {
+  if (req.method !== 'GET') return next()
+  if (!/^\/(auth|login|signin|signup|oauth|sso|oidc)(\/.*)?$/.test(req.path)) return next()
+  const rd = req.query && typeof req.query.redirect === 'string' ? req.query.redirect : ''
+  const m = rd.match(/^\/(app\/[^/]+)/)
+  if (!m) return next()
+  return res.redirect(302, '/' + m[1] + req.path + req.originalUrl.slice(req.path.length))
+})
 
 app.get('*', function (req, res) {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
