@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101d33"/>
+      <stop offset="1" stop-color="#080d1a"/>
+    </linearGradient>
+    <radialGradient id="planet" cx="0.35" cy="0.35" r="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="0.55" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/>
+  <rect x="9.5" y="9.5" width="237" height="237" rx="52.5" fill="none" stroke="#27456e" stroke-width="3"/>
+
+  <!-- stars -->
+  <circle cx="54" cy="60" r="2.6" fill="#9adcff" opacity="0.85"/>
+  <circle cx="198" cy="46" r="2" fill="#c7d2fe" opacity="0.7"/>
+  <circle cx="222" cy="152" r="2.6" fill="#9adcff" opacity="0.6"/>
+  <circle cx="42" cy="182" r="2" fill="#e0e7ff" opacity="0.5"/>
+  <circle cx="150" cy="34" r="1.6" fill="#e0e7ff" opacity="0.45"/>
+
+  <!-- orbits -->
+  <g fill="none" stroke-linecap="round">
+    <ellipse cx="128" cy="134" rx="94" ry="34" stroke="url(#ring)" stroke-width="5" opacity="0.9" transform="rotate(-18 128 134)"/>
+    <ellipse cx="128" cy="134" rx="70" ry="26" stroke="#38bdf8" stroke-width="4" opacity="0.4" transform="rotate(24 128 134)"/>
+  </g>
+
+  <!-- planet -->
+  <circle cx="128" cy="134" r="34" fill="url(#planet)"/>
+  <circle cx="117" cy="123" r="9" fill="#e0f2fe" opacity="0.55"/>
+  <circle cx="140" cy="148" r="5" fill="#1e3a8a" opacity="0.45"/>
+
+  <!-- satellite on the cyan orbit -->
+  <circle cx="215" cy="104" r="7" fill="#22d3ee"/>
+  <circle cx="215" cy="104" r="13" fill="#22d3ee" opacity="0.22"/>
+</svg>

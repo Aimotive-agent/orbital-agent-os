@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Orbital Agent OS
+GenericName=AI Agent Dashboard
+Comment=Orbital Agent OS — AI agent dashboard with workspace apps
+Exec=/usr/bin/python3 "/home/chrispc/Documents/Default Project/orbital-app.py"
+Icon=/home/chrispc/Documents/Default Project/assets/orbital-icon.png
+Terminal=false
+Categories=Development;Network;
+Keywords=orbital;ai;agents;dashboard;workspaces;
+StartupWMClass=orbital
