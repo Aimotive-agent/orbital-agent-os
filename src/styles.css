@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 *{box-sizing:border-box}
+:root{color-scheme:dark}
+/* Disable native GTK/widget painting so dark CSS backgrounds apply everywhere
+   (essential in WebKitGTK windows, harmless in Chrome/Firefox) */
+button,input,select,textarea{-webkit-appearance:none;appearance:none}
 body{margin:0;background:#101011;color:#f2f1f4;font-family:'DM Sans',sans-serif;font-size:14px}
 button,input{font:inherit}
 button{color:inherit;cursor:pointer}
