@@ -63,6 +63,41 @@ function buildPatchScript(base) {
   return `(function(){var b=${b};function r(u){if(typeof u==='string'){var o=window.location.origin;if(u.indexOf(o)===0&&u.indexOf(o+b)!==0)return o+b+u.slice(o.length).replace(/^\\//,'');if(u.charAt(0)==='/'&&u.charAt(1)!=='/'&&u.indexOf(b)!==0)return b+u.slice(1);var wm=u.match(/^(wss?:\\/\\/[^/]+)(\\/.*|$)/);if(wm&&wm[2].indexOf(b)!==0)return wm[1]+b+wm[2].slice(1);}return u;}var of=window.fetch;if(of){window.fetch=function(i,o){if(typeof i==='string'){i=r(i);}else if(i&&i.url&&i.constructor&&i.constructor.name==='Request'){try{i=new Request(r(i.url),i);}catch(e){}}return of.call(this,i,o);};}var oo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=r(u);return oo.apply(this,arguments);};var oe=window.EventSource;if(oe){window.EventSource=function(u,o){return new oe(r(u),o);};window.EventSource.prototype=oe.prototype;window.EventSource.CONNECTING=oe.CONNECTING;window.EventSource.OPEN=oe.OPEN;window.EventSource.CLOSED=oe.CLOSED;}var ow=window.WebSocket;if(ow){window.WebSocket=function(u,p){return new ow(r(u),p);};window.WebSocket.prototype=ow.prototype;window.WebSocket.CONNECTING=ow.CONNECTING;window.WebSocket.OPEN=ow.OPEN;window.WebSocket.CLOSING=ow.CLOSING;window.WebSocket.CLOSED=ow.CLOSED;}var oh=window.history&&window.history.pushState;if(oh){window.history.pushState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return oh.apply(this,arguments);};var or2=window.history&&window.history.replaceState;if(or2){window.history.replaceState=function(){if(typeof arguments[2]==='string'){arguments[2]=r(arguments[2]);}return or2.apply(this,arguments);};}}var oc=document.createElement;if(oc){document.createElement=function(t){var e=oc.call(this,t);if(e&&typeof t==='string'){var tg=String(t).toLowerCase();var p=tg==='link'?'href':(tg==='script'||tg==='img'||tg==='iframe'||tg==='audio'||tg==='video'||tg==='source'||tg==='embed')?'src':null;if(p){try{var d=Object.getOwnPropertyDescriptor(e.__proto__,p)||Object.getOwnPropertyDescriptor(e,p);if(d&&d.set){Object.defineProperty(e,p,{configurable:true,get:function(){return d.get.call(e)},set:function(v){d.set.call(e,r(v))}});}}catch(_){}}}return e;};}})();`
 }
 
+// Static rewriting of root-absolute asset/module paths inside SERVED JS and
+// CSS. The runtime hooks in buildPatchScript cannot catch every load path —
+// e.g. Next.js loads chunks via setAttribute/document.write with webpack's
+// publicPath baked into the bundle, and CSS urls never touch JS at all — so
+// the shipped code itself is rewritten before it reaches the browser.
+function rewriteTextAssets(body, base) {
+  // webpack/Next publicPath (i.p = "/_next/") — chunk URLs are derived from it
+  body = body.replace(/(\.p\s*=\s*["'])(\/[^"']*)(["'])/g, function (m, pre, v, post) {
+    if (v.indexOf(base) === 0) return m
+    return pre + base + v.replace(/^\//, '') + post
+  })
+  // template literals building root-absolute dirs: `${x}/_next/` etc.
+  // (skip when the interpolation is assetPrefix — that case is handled by the
+  // assetPrefix rewrite in the HTML pass, and prefixing twice would break)
+  body = body.replace(/(\$\{(?![^}]*assetPrefix)[^}]*\}\/)(_next|_app|static|assets)(\/)/g, function (m, p, d, t) {
+    return p + base.slice(1) + d + t
+  })
+  // quoted root-absolute paths under well-known static asset dirs
+  body = body.replace(/(["'`])(\/(?:_next|_app|static|assets)\/[^"'`]*)(["'`])/g, function (m, q, p, q2) {
+    if (p.indexOf(base) === 0) return m
+    return q + base + p.slice(1) + q2
+  })
+  // quoted root-absolute paths ending in an asset extension
+  body = body.replace(/(["'`])(\/(?!\/)[^"'`]*?\.(?:js|mjs|css|png|jpe?g|svg|gif|webp|avif|ico|woff2?|ttf|otf|eot|json|wasm|mp3|mp4|webm|map|manifest|webmanifest)(?:[?#][^"'`]*)?)(["'`])/g, function (m, q, p, q2) {
+    if (p.indexOf(base) === 0) return m
+    return q + base + p.slice(1) + q2
+  })
+  // CSS url(...) with root-absolute asset paths
+  body = body.replace(/(url\(\s*["']?)(\/(?!\/)[^)"']+\.(?:png|jpe?g|svg|gif|webp|avif|ico|woff2?|ttf|otf|eot)(?:[?#][^)"']*)?)(["']?\s*\))/g, function (m, pre, p, post) {
+    if (p.indexOf(base) === 0) return m
+    return pre + base + p.slice(1) + post
+  })
+  return body
+}
+
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
   proxyReq.removeHeader('accept-encoding')
   proxyReq.removeHeader('Accept-Encoding')
@@ -99,6 +134,8 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
 
   const ct = (proxyRes.headers['content-type'] || '').toLowerCase()
   const isHTML = ct.includes('text/html') || ct.includes('application/xhtml')
+  const isJS = ct.includes('javascript') || ct.includes('ecmascript')
+  const isCSS = ct.includes('text/css')
 
   if (isHTML) {
     delete proxyRes.headers['content-length']
@@ -118,6 +155,11 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
           // pathname.slice(base.length) for route matching).
           inner = inner.replace(/\bbase\s*:\s*["']([^"']*)["']/g, function (m, v) {
             if (v === '' || v.charAt(0) === '/') return 'base:"' + base.replace(/\/$/, '') + '"'
+            return m
+          })
+          // Next.js: assetPrefix drives the runtime public path (chunk loading)
+          inner = inner.replace(/\bassetPrefix\s*:\s*["']([^"']*)["']/g, function (m, v) {
+            if (v === '' || v === '/') return 'assetPrefix:"' + base.replace(/\/$/, '') + '"'
             return m
           })
           inner = inner.replace(/(["'])(\/(?!\/)[^"']*?\.(?:js|mjs|css|png|jpe?g|svg|gif|webp|ico|woff2?|ttf|otf|json|wasm)(?:[?#][^"']*)?)/g, function (m, q, p) {
@@ -146,6 +188,20 @@ proxy.on('proxyRes', function (proxyRes, req, res) {
         })
         res.writeHead(proxyRes.statusCode, proxyRes.headers)
         res.end($.html())
+      } catch {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers)
+        res.end(Buffer.concat(chunks))
+      }
+    })
+  } else if (isJS || isCSS) {
+    delete proxyRes.headers['content-length']
+    let chunks = []
+    proxyRes.on('data', chunk => chunks.push(chunk))
+    proxyRes.on('end', () => {
+      try {
+        const body = rewriteTextAssets(Buffer.concat(chunks).toString(), base)
+        res.writeHead(proxyRes.statusCode, proxyRes.headers)
+        res.end(body)
       } catch {
         res.writeHead(proxyRes.statusCode, proxyRes.headers)
         res.end(Buffer.concat(chunks))
